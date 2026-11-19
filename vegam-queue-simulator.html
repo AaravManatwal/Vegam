@@ -1,0 +1,186 @@
+<title>Vegam Queue Simulator</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&family=Noto+Sans+Devanagari:wght@700&display=swap">
+<style>
+/* Layout: header, controls card, queue list (rows with priority + reorder + pause), log. */
+:root{
+  --bg:#f7f7fc; --surface:#ffffff; --surface2:#ececf8; --fg:#16162b; --muted:#5b5b79; --line:#dcdcef;
+  --indigo:#6c5ce7; --cyan:#00b8d4; --accent-text:#4a3bc9; --warn:#b45309; --ok:#0f766e; --hi:#c2410c;
+  --glow1:rgba(108,92,231,.16); --glow2:rgba(0,184,212,.13);
+  --font:'Manrope',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; --font-dev:'Noto Sans Devanagari','Manrope',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121212; --surface:#1b1b25; --surface2:#262636; --fg:#f2f2fb; --muted:#a6a6c2; --line:#2f2f45;
+  --accent-text:#a197ff; --warn:#fbbf24; --ok:#5eead4; --hi:#fb923c; --glow1:rgba(108,92,231,.28); --glow2:rgba(0,184,212,.18); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121212; --surface:#1b1b25; --surface2:#262636; --fg:#f2f2fb; --muted:#a6a6c2; --line:#2f2f45;
+  --accent-text:#a197ff; --warn:#fbbf24; --ok:#5eead4; --hi:#fb923c; --glow1:rgba(108,92,231,.28); --glow2:rgba(0,184,212,.18); color-scheme:dark}
+body{background:radial-gradient(48rem 26rem at 95% -8%,var(--glow1),transparent 70%),radial-gradient(40rem 22rem at -10% 8%,var(--glow2),transparent 70%),var(--bg);
+  color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.5}
+*{box-sizing:border-box}
+.wrap{max-width:720px;margin:0 auto;padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:14px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.mark{font-family:var(--font-dev);font-weight:700;font-size:28px;line-height:1.1;background:linear-gradient(90deg,var(--indigo),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--muted);font-size:13px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:4px 12px;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:18px;min-width:0}
+h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800;margin:0 0 12px}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+label{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted);font-weight:600;min-width:0}
+select,input[type=range]{width:100%;font:inherit}
+select{background:var(--surface2);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-height:44px}
+input[type=range]{accent-color:var(--indigo);min-height:44px}
+.btns{display:flex;gap:8px;flex-wrap:wrap;grid-column:1/-1}
+button{font:inherit;font-weight:800;border-radius:16px;min-height:44px;padding:0 16px;cursor:pointer;border:1px solid var(--line);background:var(--surface2);color:var(--fg);transition:transform .15s}
+button:active{transform:scale(.95)}
+button.go{flex:1;border:0;color:#fff;background:linear-gradient(90deg,var(--indigo),#1f9fe0 60%,var(--cyan))}
+:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+#list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.row{display:grid;grid-template-columns:1fr auto;gap:8px 10px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:16px;background:var(--bg)}
+.row.running{border-color:var(--indigo)} .row.done{opacity:.6}
+.nm{display:flex;flex-direction:column;min-width:0} .nm b{overflow-wrap:anywhere} .nm span{font-size:12px;color:var(--muted)}
+.pri{min-height:36px;padding:0 12px;border-radius:12px;font-size:12.5px}
+.pri.p2{color:var(--hi);border-color:var(--hi)} .pri.p0{color:var(--muted)}
+.bar{grid-column:1/-1;height:8px;border-radius:6px;background:var(--surface2);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--indigo),var(--cyan));border-radius:6px}
+.meta{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.st{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.ops{display:flex;gap:6px} .ops button{min-height:36px;min-width:44px;padding:0 10px;font-size:13px}
+#log{margin:0;padding:0;list-style:none;font-size:12.5px;display:flex;flex-direction:column;gap:6px;min-height:60px}
+#log li{color:var(--muted);font-variant-numeric:tabular-nums} #log li:first-child{color:var(--fg)}
+.hint{color:var(--muted);font-size:12.5px;margin:10px 0 0}
+footer{color:var(--muted);font-size:12.5px;text-align:center}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<main class="wrap">
+  <header class="top">
+    <div><div class="mark">वेगम्</div><div class="sub">Queue simulator · QueuePolicy ka logic</div></div>
+    <span class="chip" id="slots">0 / 3 slots</span>
+  </header>
+
+  <section class="card controls" aria-label="Controls">
+    <label>Max parallel files: <b id="parOut">3</b>
+      <input id="par" type="range" min="1" max="10" value="3"></label>
+    <label>Sim speed
+      <select id="mult"><option value="1">x1</option><option value="5" selected>x5</option><option value="20">x20</option></select></label>
+    <div class="btns">
+      <button class="go" id="add">Add file</button>
+      <button id="pauseAll">Pause all</button><button id="resumeAll">Resume all</button><button id="reset">Reset</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Download queue</h2>
+    <ul id="list"></ul>
+    <p class="hint">Priority tap karke badlo (Low, Normal, High). Pehle priority, phir tumhara drag order (▲ ▼), phir jo pehle aaya. Max parallel kam karne se chalti hui downloads nahi rukti, sirf naye slots kam hote hain.</p>
+  </section>
+
+  <section class="card"><h2>Scheduler log</h2><ol id="log"></ol></section>
+  <footer>Powered by Vegam Engine · Simulation hai, par pick-order wahi hai jo Kotlin QueuePolicy mein hai.</footer>
+</main>
+
+<script>
+/*Q-START*/
+const MB = 1048576, LINK = 20 * MB, PER_FILE_MAX = 12 * MB, PR = ['Low', 'Normal', 'High'];
+
+class QueueSim {
+  constructor() { this.items = []; this.nextId = 1; this.maxPar = 3; this.now = 0; this.log = []; this.dirty = true; }
+  say(m) { this.log.unshift(`[${(this.now / 1000).toFixed(1)}s] ${m}`); this.log.length = Math.min(this.log.length, 40); }
+  get(id) { return this.items.find(i => i.id === id); }
+  count(st) { return this.items.filter(i => i.status === st).length; }
+  add(name, sizeMB, pri = 1) {
+    const id = this.nextId++;
+    this.items.push({ id, name, size: sizeMB * MB, prog: 0, pri, order: id, created: this.now, status: 'queued' });
+    this.say(`#${id} ${name} queue mein (${PR[pri]})`); this.dirty = true; this.pump();
+  }
+  // QueuePolicy.pickNext ka twin: priority desc, sortOrder asc, createdAt asc
+  pump() {
+    const slots = this.maxPar - this.count('running');
+    if (slots <= 0) return;
+    const q = this.items.filter(i => i.status === 'queued')
+      .sort((a, b) => b.pri - a.pri || a.order - b.order || a.created - b.created);
+    for (const i of q.slice(0, slots)) { i.status = 'running'; this.say(`pump: #${i.id} ${i.name} shuru (${PR[i.pri]})`); this.dirty = true; }
+  }
+  step(dt) {
+    this.now += dt * 1000;
+    const run = this.items.filter(i => i.status === 'running');
+    if (!run.length) return;
+    const per = Math.min(PER_FILE_MAX, LINK / run.length);
+    let finished = false;
+    for (const i of run) {
+      i.prog = Math.min(i.size, i.prog + per * dt);
+      if (i.prog >= i.size) { i.status = 'done'; finished = true; this.dirty = true; this.say(`#${i.id} ${i.name} complete`); }
+    }
+    if (finished) this.pump();
+  }
+  perFileSpeed() { const n = this.count('running'); return n ? Math.min(PER_FILE_MAX, LINK / n) : 0; }
+  pause(id) { const i = this.get(id); if (i && (i.status === 'running' || i.status === 'queued')) { i.status = 'paused'; this.say(`#${id} paused`); this.dirty = true; this.pump(); } }
+  resume(id) { const i = this.get(id); if (i && i.status === 'paused') { i.status = 'queued'; this.say(`#${id} resume, line mein`); this.dirty = true; this.pump(); } }
+  cycle(id) { const i = this.get(id); if (i) { i.pri = (i.pri + 1) % 3; this.say(`#${id} priority ${PR[i.pri]}`); this.dirty = true; } }
+  move(id, dir) {
+    const s = [...this.items].sort((a, b) => a.order - b.order), k = s.findIndex(i => i.id === id), j = k + dir;
+    if (k < 0 || j < 0 || j >= s.length) return;
+    [s[k].order, s[j].order] = [s[j].order, s[k].order]; this.dirty = true;
+  }
+  setMax(n) { this.maxPar = n; this.say(`max parallel ${n}`); this.pump(); }
+  pauseAll() { this.items.forEach(i => { if (i.status === 'running' || i.status === 'queued') i.status = 'paused'; }); this.say('Sab paused'); this.dirty = true; }
+  resumeAll() { this.items.forEach(i => { if (i.status === 'paused') i.status = 'queued'; }); this.say('Sab resume'); this.dirty = true; this.pump(); }
+}
+const SAMPLE = [['ubuntu.iso', 1024, 1], ['movie.mkv', 700, 1], ['game-update.apk', 150, 1], ['photos.zip', 320, 1], ['podcast.mp3', 48, 0], ['invoice.pdf', 6, 2]];
+/*Q-END*/
+
+const $ = id => document.getElementById(id);
+let q, extra = 0;
+const NAMES = [['clip.mp4', 90], ['backup.tar', 260], ['song.flac', 35], ['slides.pptx', 22], ['dataset.csv', 410]];
+const fmt = b => b >= 1024 * MB ? (b / 1024 / MB).toFixed(1) + ' GB' : Math.round(b / MB) + ' MB';
+
+// Pehle sab files line mein (slots 0), phir ek saath pump: tabhi priority ka asar dikhta hai.
+function init() {
+  q = new QueueSim(); q.maxPar = 0; SAMPLE.forEach(s => q.add(...s));
+  q.log.length = 0; q.say('Queue ready, 6 files'); q.maxPar = +$('par').value; q.pump(); q.dirty = true;
+}
+
+function renderList() {
+  const rows = [...q.items].sort((a, b) => a.order - b.order).map(i => {
+    const active = i.status === 'running' || i.status === 'queued';
+    const ops = i.status === 'done' ? '' :
+      `<div class="ops"><button data-act="up" aria-label="Move up">▲</button><button data-act="down" aria-label="Move down">▼</button><button data-act="pp">${active ? 'Pause' : 'Resume'}</button></div>`;
+    return `<li class="row ${i.status}" data-id="${i.id}">
+      <div class="nm"><b>${i.name}</b><span>${fmt(i.size)}</span></div>
+      <button class="pri p${i.pri}" data-act="pri" ${i.status === 'done' ? 'disabled' : ''}>${PR[i.pri]}</button>
+      <div class="bar"><i id="b${i.id}"></i></div>
+      <div class="meta"><span class="st" id="s${i.id}"></span>${ops}</div></li>`;
+  }).join('');
+  $('list').innerHTML = rows; q.dirty = false;
+}
+
+function render() {
+  if (q.dirty) renderList();
+  const sp = q.perFileSpeed();
+  for (const i of q.items) {
+    const b = $('b' + i.id), s = $('s' + i.id); if (!b) continue;
+    b.style.width = (i.prog / i.size * 100).toFixed(1) + '%';
+    s.textContent = i.status === 'running' ? `${Math.floor(i.prog / i.size * 100)}% · ${(sp / MB).toFixed(1)} MB/s`
+      : i.status === 'queued' ? 'Waiting for a slot' : i.status === 'paused' ? 'Paused' : 'Done';
+  }
+  $('slots').textContent = `${q.count('running')} / ${q.maxPar} slots`;
+  $('log').innerHTML = q.log.slice(0, 8).map(l => `<li>${l}</li>`).join('');
+}
+
+$('list').addEventListener('click', e => {
+  const btn = e.target.closest('button[data-act]'); if (!btn) return;
+  const id = +btn.closest('.row').dataset.id, a = btn.dataset.act;
+  if (a === 'pri') q.cycle(id); else if (a === 'up') q.move(id, -1); else if (a === 'down') q.move(id, 1);
+  else if (a === 'pp') (q.get(id).status === 'paused' ? q.resume(id) : q.pause(id));
+  render();
+});
+$('par').oninput = e => { $('parOut').textContent = e.target.value; q.setMax(+e.target.value); render(); };
+$('add').onclick = () => { const n = NAMES[extra++ % NAMES.length]; q.add(`${extra}-${n[0]}`, n[1]); render(); };
+$('pauseAll').onclick = () => { q.pauseAll(); render(); };
+$('resumeAll').onclick = () => { q.resumeAll(); render(); };
+$('reset').onclick = () => { init(); render(); };
+
+init(); render();
+setInterval(() => { const n = +$('mult').value; for (let k = 0; k < n; k++) q.step(0.1); render(); }, 100);
+</script>

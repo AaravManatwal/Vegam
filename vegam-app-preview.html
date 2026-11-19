@@ -1,0 +1,633 @@
+<title>Vegam App Preview</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&family=Noto+Sans+Devanagari:wght@700&display=swap">
+<style>
+/* Layout: ek phone-width app column. Upar screen content, neeche fixed bottom nav + FAB. Overlays: splash, add sheet, notification shade. */
+:root{
+  --bg:#fafafa; --surface:#ffffff; --surface2:#efeffa; --fg:#16162b; --muted:#5b5b79; --line:#e0e0f1;
+  --c1:#6c5ce7; --c2:#00b8d4; --accent-text:#4a3bc9; --ok:#0f766e; --bad:#c2410c; --hi:#c2410c;
+  --glow1:rgba(108,92,231,.14); --glow2:rgba(0,184,212,.12); --shadow:0 10px 30px rgba(60,50,140,.10);
+  --font:'Manrope',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; --font-dev:'Noto Sans Devanagari','Manrope',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121212; --surface:#1b1b25; --surface2:#262636; --fg:#f2f2fb; --muted:#a6a6c2; --line:#2f2f45;
+  --accent-text:#a9a0ff; --ok:#5eead4; --bad:#fb923c; --hi:#fb923c; --glow1:rgba(108,92,231,.30); --glow2:rgba(0,184,212,.18); --shadow:0 10px 30px rgba(0,0,0,.4); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121212; --surface:#1b1b25; --surface2:#262636; --fg:#f2f2fb; --muted:#a6a6c2; --line:#2f2f45;
+  --accent-text:#a9a0ff; --ok:#5eead4; --bad:#fb923c; --hi:#fb923c; --glow1:rgba(108,92,231,.30); --glow2:rgba(0,184,212,.18); --shadow:0 10px 30px rgba(0,0,0,.4); color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:radial-gradient(40rem 22rem at 100% -6%,var(--glow1),transparent 70%),radial-gradient(34rem 20rem at -10% 4%,var(--glow2),transparent 70%),var(--bg);
+  color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.45;overflow-x:hidden}
+.app{max-width:480px;margin:0 auto;min-height:100%;position:relative;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 120px}
+button{font:inherit;color:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface2);border-radius:16px;min-height:44px;padding:0 16px;font-weight:800;transition:transform .25s cubic-bezier(.3,1.6,.5,1)}
+button:active{transform:scale(.95)}
+button:disabled{opacity:.45}
+:focus-visible{outline:3px solid var(--c2);outline-offset:2px}
+input[type=text],input[type=search]{width:100%;font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;min-height:48px}
+input[type=range]{width:100%;accent-color:var(--c1);min-height:40px}
+h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800;margin:18px 2px 10px}
+.mark{font-family:var(--font-dev);font-weight:700;font-size:30px;line-height:1.15;background:linear-gradient(90deg,var(--c1),var(--c2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.tag{color:var(--muted);font-size:12.5px}
+.hd{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0 10px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:16px;box-shadow:var(--shadow);min-width:0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stats div{min-width:0}.stats dt{font-size:11.5px;color:var(--muted)}.stats dd{margin:0;font-weight:800;font-size:16px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+/* download card */
+.list{display:flex;flex-direction:column;gap:12px}
+.sw{position:relative;border-radius:24px;overflow:hidden}
+.sw .del{position:absolute;inset:0;background:var(--bad);color:#fff;display:flex;align-items:center;justify-content:flex-end;padding-right:24px;font-weight:800;border-radius:24px}
+.dl{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:14px;display:grid;grid-template-columns:44px 1fr 56px;gap:4px 12px;align-items:center;touch-action:pan-y;transition:transform .25s cubic-bezier(.3,1.4,.5,1)}
+.dl.run{border-color:color-mix(in srgb,var(--c1) 55%,var(--line))}
+.dl.drop{animation:drop .6s cubic-bezier(.3,1.7,.5,1)}
+@keyframes drop{from{transform:translateY(-36px) scale(.92);opacity:0}to{transform:none;opacity:1}}
+.ft{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:11px;font-weight:800;color:#fff;letter-spacing:.04em}
+.nm{min-width:0}.nm b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nm span{font-size:12px;color:var(--muted)}
+.ringw{position:relative;width:56px;height:56px}
+.ringw svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ringw .tr{stroke:var(--surface2)}
+.ringw .arc{transition:stroke-dashoffset .15s linear}
+.run .ringw .arc{filter:drop-shadow(0 0 4px color-mix(in srgb,var(--c1) 70%,transparent));animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{filter:drop-shadow(0 0 8px color-mix(in srgb,var(--c2) 80%,transparent))}}
+.ringw b{position:absolute;inset:0;display:grid;place-items:center;font-size:12.5px;font-variant-numeric:tabular-nums}
+.meta{grid-column:1/-1;display:flex;align-items:center;gap:10px;margin-top:6px}
+.spd{font-weight:800;font-size:15px;min-width:88px;white-space:nowrap}.eta{font-size:12px;color:var(--muted);flex:1;min-width:0;white-space:nowrap;font-variant-numeric:tabular-nums}
+.meta .pri{flex:none}.meta .pp{flex:none}
+.pp{min-height:36px;padding:0 14px;font-size:13px}
+.bar{grid-column:1/-1;height:6px;border-radius:6px;background:var(--surface2);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--c1),var(--c2));border-radius:6px}
+.done .dl{padding:10px 14px}
+.dg{display:inline-block;height:1.2em;overflow:hidden;vertical-align:bottom}
+.dg>span{display:flex;flex-direction:column;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.dg i{height:1.2em;line-height:1.2em;font-style:normal}
+.ch{display:inline-block;height:1.2em;line-height:1.2em;vertical-align:bottom;white-space:pre}
+.pri{font-size:11px;font-weight:800;padding:2px 8px;border-radius:12px;border:1px solid var(--line);color:var(--muted)}.pri.p2{color:var(--hi);border-color:var(--hi)}
+.empty{text-align:center;color:var(--muted);padding:22px 10px;border:1px dashed var(--line);border-radius:24px}
+.skel{height:14px;border-radius:8px;background:linear-gradient(90deg,var(--surface2) 25%,var(--line) 50%,var(--surface2) 75%);background-size:200% 100%;animation:sh 1.1s linear infinite}
+@keyframes sh{to{background-position:-200% 0}}
+/* nav + fab */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:center;
+  padding:8px max(16px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
+  background:color-mix(in srgb,var(--surface) 78%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-top:1px solid var(--line)}
+.nav nav{display:flex;width:100%;max-width:480px;gap:6px}
+.nav button{flex:1;border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11.5px;color:var(--muted);min-height:52px;border-radius:16px}
+.nav button svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .35s cubic-bezier(.3,1.7,.5,1)}
+.nav button.on{color:var(--accent-text)}.nav button.on svg{transform:scale(1.18) translateY(-1px)}
+.fab{position:fixed;z-index:21;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(84px + env(safe-area-inset-bottom,0px));width:60px;height:60px;border-radius:20px;border:0;color:#fff;font-size:30px;line-height:1;padding:0;
+  background:linear-gradient(135deg,var(--c1),var(--c2));box-shadow:0 10px 26px color-mix(in srgb,var(--c1) 55%,transparent)}
+.fab[hidden]{display:none}
+/* sheet */
+.scrim{position:fixed;inset:0;z-index:40;background:rgba(10,10,25,.5);opacity:0;pointer-events:none;transition:opacity .25s}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;margin:0 auto;max-width:480px;max-height:88%;overflow:auto;background:var(--surface);border-radius:28px 28px 0 0;border:1px solid var(--line);
+  padding:18px max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));transform:translateY(105%);transition:transform .45s cubic-bezier(.25,1.25,.4,1)}
+.sheet.on{transform:none}
+.sheet.on .st{animation:stag .5s cubic-bezier(.3,1.5,.5,1) backwards;animation-delay:calc(var(--i)*55ms + 120ms)}
+@keyframes stag{from{opacity:0;transform:translateY(16px)}}
+.grab{width:40px;height:4px;border-radius:4px;background:var(--line);margin:0 auto 14px}
+.sheet .go{position:sticky;bottom:0;box-shadow:0 -14px 14px -6px var(--surface)}
+.fld{display:flex;flex-direction:column;gap:6px;margin-top:10px;font-size:13px;color:var(--muted);font-weight:600}
+.seg{display:flex;gap:6px}.seg button{flex:1;min-height:40px;border-radius:12px;font-size:13px}.seg button.on{background:linear-gradient(90deg,var(--c1),var(--c2));color:#fff;border-color:transparent}
+.tg{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;font-weight:600}
+.sw2{width:52px;height:30px;border-radius:20px;padding:0;position:relative;background:var(--surface2);min-height:30px}
+.sw2 i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--muted);transition:transform .3s cubic-bezier(.3,1.6,.5,1)}
+.sw2.on{background:linear-gradient(90deg,var(--c1),var(--c2));border-color:transparent}.sw2.on i{transform:translateX(22px);background:#fff}
+.det{padding:14px;border:1px solid var(--line);border-radius:16px;background:var(--bg);margin-top:12px;display:flex;gap:12px;align-items:center}
+/* detail */
+.back{display:flex;align-items:center;gap:8px;margin:2px 0 8px;border:0;background:transparent;padding:0;color:var(--accent-text)}
+.big{display:grid;place-items:center;padding:6px 0}
+.big .ringw{width:168px;height:168px}.big .ringw b{font-size:30px}
+.sg{display:grid;grid-template-columns:34px 1fr 44px;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);margin:6px 0;font-variant-numeric:tabular-nums}
+.sg .bar{grid-column:auto;height:9px}.sg.fin .bar i{opacity:.55}
+canvas{display:block;width:100%;height:150px}
+.info{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px;margin:0}.info dt{color:var(--muted)}.info dd{margin:0;overflow-wrap:anywhere}
+.acts{display:flex;gap:8px}.acts button{flex:1}.acts .danger{color:var(--bad)}
+/* stats */
+.days{display:flex;align-items:flex-end;gap:8px;height:130px}.days div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;height:100%;font-size:11px;color:var(--muted)}
+.days i{display:block;width:100%;border-radius:10px 10px 4px 4px;background:linear-gradient(180deg,var(--c2),var(--c1));min-height:4px}
+.pie{display:flex;gap:18px;align-items:center}.donut{width:120px;height:120px;border-radius:50%;flex:none;position:relative}
+.donut::after{content:"";position:absolute;inset:26px;border-radius:50%;background:var(--surface)}
+.lg{display:flex;flex-direction:column;gap:6px;font-size:13px;min-width:0}.lg span{display:flex;align-items:center;gap:8px}.lg u{width:10px;height:10px;border-radius:3px;display:inline-block;text-decoration:none}
+.cnt{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}.cnt b{display:block;font-size:22px;font-variant-numeric:tabular-nums}.cnt span{font-size:12px;color:var(--muted)}
+/* settings */
+.row2{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}.row2:last-child{border:0}.row2 label{font-weight:600}
+.sw3{display:flex;gap:8px}.sw3 button{width:36px;height:36px;min-height:36px;padding:0;border-radius:12px}.sw3 button.on{outline:3px solid var(--fg);outline-offset:2px}
+select{font:inherit;color:var(--fg);background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:8px 10px;min-height:40px}
+.brand{text-align:center;color:var(--muted);font-size:12.5px;margin-top:18px}
+/* notification shade */
+.shade{position:fixed;left:0;right:0;top:0;z-index:60;margin:0 auto;max-width:480px;padding:max(10px,env(safe-area-inset-top,0px)) 12px 12px;transform:translateY(-110%);transition:transform .45s cubic-bezier(.25,1.2,.4,1);pointer-events:none}
+.shade.on{transform:none;pointer-events:auto}
+.ntf{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:12px 14px;box-shadow:0 16px 40px rgba(0,0,0,.35)}
+.ntf .t{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}.ntf .ic{width:18px;height:18px;border-radius:6px;background:linear-gradient(135deg,var(--c1),var(--c2))}
+.ntf b{display:block;margin-top:4px}.ntf p{margin:2px 0 8px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.ntf .bar{margin-bottom:8px}.ntf button{min-height:34px;font-size:13px;padding:0 14px}
+/* onboarding */
+.onb{position:fixed;inset:0;z-index:90;background:var(--bg);display:flex;flex-direction:column;
+  padding-top:env(safe-area-inset-top,0px)}
+.onb[hidden]{display:none}
+.onb::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(40rem 22rem at 100% -6%,var(--glow1),transparent 70%),radial-gradient(34rem 20rem at -10% 4%,var(--glow2),transparent 70%)}
+.skip{position:absolute;top:calc(10px + env(safe-area-inset-top,0px));right:max(16px,env(safe-area-inset-right,0px));z-index:2;border:0;background:transparent;color:var(--muted);min-height:44px}
+.pages{flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
+.pages::-webkit-scrollbar{display:none}
+.pg{flex:0 0 100%;scroll-snap-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;
+  padding:60px max(24px,env(safe-area-inset-right,0px)) 12px max(24px,env(safe-area-inset-left,0px));max-width:100vw;overflow:hidden}
+.pg .art{width:min(260px,70vw);height:200px;display:grid;place-items:center;will-change:transform}
+.pg .tx{will-change:transform;max-width:360px}
+.pg h1{margin:0;font-size:24px;line-height:1.25;text-wrap:balance}
+.pg p{margin:6px 0 0;color:var(--muted)}
+.vmark{width:150px;height:150px;overflow:visible}
+.vmark path{fill:none;stroke-width:9;stroke-linecap:round;stroke-dasharray:110;stroke-dashoffset:110}
+.pg.act .vmark path{animation:draw .9s cubic-bezier(.3,.9,.3,1) forwards}
+.pg.act .vmark path:nth-child(2){animation-delay:.15s}.pg.act .vmark path:nth-child(3){animation-delay:.3s}
+@keyframes draw{to{stroke-dashoffset:0}}
+.bars{display:grid;gap:9px;width:100%}
+.bars b{display:block;height:12px;border-radius:8px;background:var(--surface2);overflow:hidden}
+.bars i{display:block;height:100%;width:0;border-radius:8px;background:linear-gradient(90deg,var(--c1),var(--c2));transition:width 1.4s cubic-bezier(.2,.8,.2,1) var(--d)}
+.pg.act .bars i{width:var(--w)}
+.perm{display:flex;gap:12px;align-items:center;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:12px 14px;width:100%}
+.perm div{flex:1;min-width:0}.perm b{display:block}.perm span{font-size:12.5px;color:var(--muted)}
+.perm button{min-height:36px;font-size:13px;padding:0 14px}.perm .ok{color:var(--ok);font-weight:800;font-size:13px}
+.perms{display:grid;gap:10px;width:100%;max-width:360px;margin-top:10px}
+.onbf{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px max(20px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px))}
+.dots{display:flex;gap:8px}.dots i{width:8px;height:8px;border-radius:8px;background:var(--line);transition:width .35s cubic-bezier(.3,1.6,.5,1),background .3s}
+.dots i.on{width:26px;background:linear-gradient(90deg,var(--c1),var(--c2))}
+.onbf .go{min-width:140px;border:0;color:#fff;background:linear-gradient(90deg,var(--c1),var(--c2));min-height:48px}
+/* splash */
+.splash{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:#121212;transition:opacity .5s}
+.splash.out{opacity:0;pointer-events:none}
+.lg line{stroke-dasharray:100;stroke-dashoffset:100;animation:ld .7s ease-out forwards}.lg line:nth-child(2){animation-delay:.08s}.lg line:nth-child(3){animation-delay:.16s}.lg.st line{stroke-dashoffset:0;animation:none}
+@keyframes ld{to{stroke-dashoffset:0}}
+.okc circle{transform-origin:50px 50px;transform:scale(0);animation:pop .55s cubic-bezier(.34,1.56,.64,1) forwards}.okc path{stroke-dasharray:80;stroke-dashoffset:80;animation:ld .35s .4s ease-out forwards}
+@keyframes pop{to{transform:scale(1)}}
+.splash{display:flex;flex-direction:column;align-items:center;justify-content:center}.splash .lg{width:120px;height:120px;margin-bottom:10px}.hdl{display:flex;align-items:center;gap:12px}.hdl .lg{width:40px;height:40px;flex:none}
+.splash div{position:relative;overflow:hidden;padding:6px 18px;font-family:var(--font-dev);font-size:56px;font-weight:700;background:linear-gradient(90deg,#6c5ce7,#00b8d4);-webkit-background-clip:text;background-clip:text;color:transparent;animation:fadein .9s ease both}
+.splash div::after{content:"";position:absolute;top:0;bottom:0;width:40%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.75),transparent);animation:streak 1.1s .45s ease-in-out forwards}
+@keyframes fadein{from{opacity:0;transform:scale(.94)}}@keyframes streak{to{left:130%}}
+.splash small{position:absolute;bottom:18%;color:#a6a6c2;font-size:13px;letter-spacing:.04em}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+
+<div class="onb" id="onb" hidden role="dialog" aria-label="Welcome to Vegam">
+  <button class="skip" id="onbSkip">Skip</button>
+  <div class="pages" id="pages">
+    <section class="pg">
+      <div class="art"><svg class="vmark" viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="vg" gradientUnits="userSpaceOnUse" x1="14" y1="10" x2="106" y2="108"><stop offset="0" stop-color="var(--c1)"/><stop offset="1" stop-color="var(--c2)"/></linearGradient></defs>
+        <path d="M18 14 L60 104" stroke="url(#vg)"/><path d="M102 14 L60 104" stroke="url(#vg)"/><path d="M60 28 L60 104" stroke="url(#vg)" opacity=".7"/></svg></div>
+      <div class="tx"><div class="mark" style="font-size:40px">वेगम्</div><h1>Download at the speed of thought</h1><p>हर डाउनलोड, वेग से।</p></div>
+    </section>
+    <section class="pg">
+      <div class="art"><div class="bars" aria-hidden="true">
+        <b><i style="--w:92%;--d:.0s"></i></b><b><i style="--w:78%;--d:.1s"></i></b><b><i style="--w:100%;--d:.2s"></i></b><b><i style="--w:64%;--d:.3s"></i></b>
+        <b><i style="--w:88%;--d:.4s"></i></b><b><i style="--w:71%;--d:.5s"></i></b><b><i style="--w:96%;--d:.6s"></i></b><b><i style="--w:83%;--d:.7s"></i></b></div></div>
+      <div class="tx"><h1>Ek file, 8 raaste</h1><p>Vegam Engine file ko 8 se 16 hisson mein todkar sab ek saath download karta hai. Jo hissa pehle khatam ho, wo dusre ka kaam baant leta hai.</p></div>
+    </section>
+    <section class="pg">
+      <div class="tx"><h1>Rukein kahin bhi, chalein wahin se</h1><p>App band ho, net chala jaaye ya phone restart ho, progress safe rehta hai.</p></div>
+      <div class="perms">
+        <div class="perm"><div><b>Notifications</b><span>Progress, speed aur Pause button notification mein dikhane ke liye.</span></div><button id="permN">Allow</button></div>
+        <div class="perm"><div><b>Storage</b><span>Files app ke private folder mein save hoti hain. Koi permission nahi chahiye.</span></div><span class="ok">Ready</span></div>
+      </div>
+    </section>
+  </div>
+  <div class="onbf"><div class="dots" id="dots"></div><button class="go" id="onbNext">Next</button></div>
+</div>
+<div class="splash" id="splash"><span id="splogo"></span><div>वेगम्</div><small>Download at the speed of thought</small></div>
+
+<div class="shade" id="shade" aria-live="polite"><div class="ntf" id="ntf"></div></div>
+<main class="app" id="app"></main>
+<button class="fab" id="fab" aria-label="Add download">+</button>
+<div class="nav"><nav id="nav"></nav></div>
+<div class="scrim" id="scrim"></div>
+<section class="sheet" id="sheet" aria-label="Add download"></section>
+
+<script>
+/*SIM-START*/
+const MB = 1048576, GB = 1024 * MB, LINK = 22 * MB, PER = 12 * MB;
+const TYPES = { iso: ['ISO', '#6c5ce7'], mkv: ['VID', '#e1306c'], mp4: ['VID', '#e1306c'], zip: ['ZIP', '#f59e0b'], apk: ['APK', '#16a34a'], pdf: ['PDF', '#dc2626'], mp3: ['AUD', '#0ea5e9'], jpg: ['IMG', '#8b5cf6'], other: ['FILE', '#64748b'] };
+const typeOf = n => TYPES[(n.split('.').pop() || '').toLowerCase()] || TYPES.other;
+const PRN = ['Low', 'Normal', 'High'];
+const hash = s => { let h = 7; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; };
+
+class Sim {
+  constructor() { this.items = []; this.nextId = 1; this.maxPar = 3; this.segN = 8; this.mult = 5; this.t = 0; this.dirty = true; this.todayBytes = 0; this.failed = 1; this.cancelled = 2; this.limit = 0; }
+  get(id) { return this.items.find(i => i.id === id); }
+  add(name, size, o = {}) {
+    const n = Math.max(1, Math.min(16, o.segs || this.segN));
+    const per = Math.floor(size / n);
+    const segs = Array.from({ length: n }, (_, k) => ({ s: k * per, e: k === n - 1 ? size - 1 : (k + 1) * per - 1, d: 0 }));
+    const it = { id: this.nextId++, name, size, prog: 0, status: 'queued', pri: o.pri ?? 1, order: this.nextId, wifi: !!o.wifi, segs, speed: 0, hist: [], url: o.url || 'https://cdn.example.com/' + name, fresh: true, doneAt: 0, at: o.at || 0, err: '' };
+    this.items.push(it); this.dirty = true; this.pump(); return it;
+  }
+  addDone(name, size, daysAgo) { const it = { id: this.nextId++, name, size, prog: size, status: 'done', pri: 1, order: 0, segs: [], speed: 0, hist: [], daysAgo }; this.items.push(it); }
+  running() { return this.items.filter(i => i.status === 'running'); }
+  pump() {
+    const slots = this.maxPar - this.running().length; if (slots <= 0) return;
+    const q = this.items.filter(i => i.status === 'queued' && (!i.at || i.at <= this.t)).sort((a, b) => b.pri - a.pri || a.order - b.order || a.id - b.id);
+    q.slice(0, slots).forEach(i => { i.status = 'running'; this.dirty = true; });
+  }
+  step(dt) {
+    this.t += dt;
+    if (this.items.some(i => i.status === 'queued' && i.at && i.at <= this.t)) this.pump();
+    const run = this.running(); if (!run.length) return;
+    const ceil = this.limit > 0 ? Math.min(LINK, this.limit) : LINK;
+    const share = Math.min(PER, ceil / run.length);
+    let fin = false;
+    for (const i of run) {
+      i.speed = share * (0.88 + 0.24 * Math.random());
+      let bytes = i.speed * dt;
+      const open = i.segs.filter(s => s.d < s.e - s.s + 1);
+      const w = open.map(() => 0.7 + Math.random() * 0.6), tw = w.reduce((a, b) => a + b, 0);
+      open.forEach((s, k) => { const add = Math.min(bytes * w[k] / tw, s.e - s.s + 1 - s.d); s.d += add; });
+      i.prog = Math.min(i.size, i.segs.reduce((a, s) => a + s.d, 0));
+      this.todayBytes += i.speed * dt;
+      if (Math.floor(this.t) !== Math.floor(this.t - dt)) { i.hist.push(i.speed); if (i.hist.length > 60) i.hist.shift(); }
+      if (i.prog >= i.size - 1) { i.prog = i.size; i.status = 'done'; i.speed = 0; i.doneAt = this.t; i.celebrate = true; fin = true; this.dirty = true; }
+    }
+    if (fin) this.pump();
+  }
+  pause(id) { const i = this.get(id); if (i && (i.status === 'running' || i.status === 'queued')) { i.status = 'paused'; i.speed = 0; this.dirty = true; this.pump(); } }
+  resume(id) { const i = this.get(id); if (i && (i.status === 'paused' || i.status === 'failed')) { i.status = 'queued'; i.err = ''; i.at = 0; this.dirty = true; this.pump(); } }
+  fail(id, msg) { const i = this.get(id); if (i) { i.status = 'failed'; i.err = msg; i.speed = 0; this.dirty = true; this.pump(); } }
+  remove(id) { const i = this.get(id); if (!i) return; if (i.status !== 'done') this.cancelled++; this.items = this.items.filter(x => x.id !== id); this.dirty = true; this.pump(); }
+  totalSpeed() { return this.running().reduce((a, i) => a + i.speed, 0); }
+}
+/*SIM-END*/
+
+const L = { en: { home: 'Home', stats: 'Stats', settings: 'Settings', active: 'Active', done: 'Completed' }, hi: { home: 'होम', stats: 'आँकड़े', settings: 'सेटिंग्स', active: 'चालू', done: 'पूरे हुए' }, hx: { home: 'Home', stats: 'Stats', settings: 'Settings', active: 'Chalu downloads', done: 'Poore hue' } };
+const ACCENTS = [['#6c5ce7', '#00b8d4'], ['#ff6b6b', '#feca57'], ['#10b981', '#06b6d4'], ['#ec4899', '#8b5cf6']];
+const ICONS = {
+  home: '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>',
+  stats: '<path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/>',
+  settings: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>'
+};
+const $ = id => document.getElementById(id);
+// Logo: 3 converging speed lines = "V" (Kotlin ke LOGO_LINES jaisi hi coordinates, 100 box).
+const logo = (cls = '') => `<svg class="lg ${cls}" viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="lgg" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="100" y2="100"><stop offset="0" stop-color="#6c5ce7"/><stop offset="1" stop-color="#00b8d4"/></linearGradient></defs><g stroke="url(#lgg)" stroke-width="11" stroke-linecap="round" fill="none"><line x1="10" y1="14" x2="50" y2="86"/><line x1="90" y1="14" x2="50" y2="86"/><line x1="50" y1="38" x2="50" y2="86"/></g></svg>`;
+const okCheck = () => `<svg class="okc" viewBox="0 0 100 100" width="120" height="120" role="img" aria-label="Download complete"><defs><linearGradient id="okg" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="100" y2="100"><stop offset="0" stop-color="#6c5ce7"/><stop offset="1" stop-color="#00b8d4"/></linearGradient></defs><circle cx="50" cy="50" r="50" fill="url(#okg)"/><path d="M26 53 L43 69 L74 34" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const S = { screen: 'home', detail: null, q: '', theme: 'system', accent: 0, lang: 'hx', notify: true, dyn: false, wifiDef: false, charging: false, folder: false, sheet: false, shade: false, add: { url: '', name: '', size: 0, loading: false, segs: 8, pri: 1, wifi: false, when: 0, folder: false }, confirm: false, sha: {} };
+const sim = new Sim();
+const fmt = b => b >= GB ? (b / GB).toFixed(2) + ' GB' : b >= MB ? (b / MB).toFixed(1) + ' MB' : Math.round(b / 1024) + ' KB';
+const fmtEta = s => !isFinite(s) || s < 0 ? '--' : s >= 3600 ? `${Math.floor(s / 3600)}h ${String(Math.floor(s % 3600 / 60)).padStart(2, '0')}m` : s >= 60 ? `${Math.floor(s / 60)}m ${String(Math.round(s % 60)).padStart(2, '0')}s` : `${Math.round(s)}s`;
+const buzz = ms => { try { if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate(ms); } catch (e) { } };
+const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const fuzzy = (q, s) => { q = q.toLowerCase(); s = s.toLowerCase(); let k = 0; for (const c of s) if (c === q[k]) k++; return k === q.length; };
+
+// ---------- seed ----------
+sim.maxPar = 3;
+[['Lecture-Series-S1.mkv', 842 * MB, 6], ['Vegam-sample.apk', 38 * MB, 5], ['Study-Notes.pdf', 12 * MB, 3], ['Playlist-Mix.mp3', 164 * MB, 2], ['Wallpapers.zip', 96 * MB, 1], ['Trip-Photos.jpg', 58 * MB, 0]].forEach(d => sim.addDone(d[0], d[1], d[2]));
+sim.maxPar = 0;
+const seeds = [['Ubuntu-24.04-desktop.iso', 1024 * MB, 1, .34], ['Movie-4K.mkv', 700 * MB, 1, .12], ['game-update.apk', 150 * MB, 1, .61], ['Photos-2026.zip', 320 * MB, 1, 0], ['podcast-ep42.mp3', 48 * MB, 0, 0], ['Invoice-Nov.pdf', 6 * MB, 2, 0]];
+seeds.forEach(s => { const it = sim.add(s[0], s[1], { pri: s[2] }); it.fresh = false; it.segs.forEach(g => g.d = (g.e - g.s + 1) * Math.min(1, s[3] * (0.75 + Math.random() * 0.5))); it.prog = it.segs.reduce((a, g) => a + g.d, 0); });
+const fl = sim.items.find(i => i.name === 'Photos-2026.zip'); fl.name = 'Broken-link.zip'; fl.segs.forEach(g => g.d = (g.e - g.s + 1) * .27); fl.prog = fl.segs.reduce((a, g) => a + g.d, 0); sim.fail(fl.id, 'Server ne 503 diya (5 retry ke baad)');
+sim.maxPar = 3; sim.pump();
+// Graph shuru se bhara dikhe: pichhle 60 second ka sample speed.
+sim.items.forEach(i => { if (i.status === 'running') { i.speed = 6 * MB; i.hist = Array.from({ length: 60 }, (_, k) => (4.5 + 2.5 * Math.sin(k / 6) + Math.random()) * MB); } });
+
+// ---------- digit ticker ----------
+function ticker(el, text) {
+  // Har 100ms par ghumne se glitchy dikhta hai, isliye digits ~0.8s mein ek baar roll hote hain.
+  if (!el || el.dataset.v === text) return;
+  const now = performance.now(), same0 = el.dataset.v !== undefined && el.dataset.v.length === text.length && /\d/.test(text);
+  if (same0 && now - (+el.dataset.t || 0) < 800) return;
+  el.dataset.v = text; el.dataset.t = now;
+  const kids = [...el.children], same = kids.length === text.length && [...text].every((c, k) => /\d/.test(c) === kids[k].classList.contains('dg'));
+  if (!same) el.innerHTML = [...text].map(c => /\d/.test(c) ? `<span class="dg"><span>${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<i>${n}</i>`).join('')}</span></span>` : `<span class="ch">${c}</span>`).join('');
+  [...el.children].forEach((k, n) => { if (k.classList.contains('dg')) k.firstChild.style.transform = `translateY(${-text[n] * 1.2}em)`; else k.textContent = text[n]; });
+}
+const ring = (p, size = 56) => `<div class="ringw" style="width:${size}px;height:${size}px"><svg viewBox="0 0 120 120"><defs><linearGradient id="g${size}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--c1)"/><stop offset="1" stop-color="var(--c2)"/></linearGradient></defs><circle class="tr" cx="60" cy="60" r="52" fill="none" stroke-width="10"/><circle class="arc" cx="60" cy="60" r="52" fill="none" stroke="url(#g${size})" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="${326.7 * (1 - p)}"/></svg><b data-pct>${Math.floor(p * 100)}%</b></div>`;
+const tile = n => { const t = typeOf(n); return `<div class="ft" style="background:${t[1]}">${t[0]}</div>`; };
+
+// ---------- screens ----------
+function renderShell() {
+  const t = L[S.lang];
+  $('nav').innerHTML = [['home', t.home], ['stats', t.stats], ['settings', t.settings]].map(([k, n]) =>
+    `<button data-nav="${k}" class="${S.screen === k || (k === 'home' && S.screen === 'detail') ? 'on' : ''}"><svg viewBox="0 0 24 24">${ICONS[k]}</svg>${n}</button>`).join('');
+  $('fab').hidden = S.screen !== 'home';
+}
+function render() {
+  renderShell();
+  const a = $('app');
+  if (S.screen === 'home') {
+    a.innerHTML = `<header class="hd"><div class="hdl">${logo('st')}<div><div class="mark">वेगम्</div><div class="tag">हर डाउनलोड, वेग से।</div></div></div><button data-act="shade">Notification</button></header>
+    <section class="card"><dl class="stats" style="margin:0"><div><dt>Total downloaded</dt><dd data-s="tot"></dd></div><div><dt>Speed now</dt><dd data-s="spd"></dd></div><div><dt>Storage used</dt><dd data-s="sto"></dd></div></dl></section>
+    <div style="margin-top:14px"><input type="search" id="q" placeholder="Search downloads" value="${esc(S.q)}" aria-label="Search downloads"></div><div id="lists"></div>`;
+    renderLists();
+  } else if (S.screen === 'detail') renderDetail();
+  else if (S.screen === 'stats') renderStats();
+  else renderSettings();
+  update();
+}
+function activeCard(i) {
+  const p = i.prog / i.size, run = i.status === 'running';
+  return `<div class="sw" data-sw="${i.id}"><div class="del">Delete</div><article class="dl ${run ? 'run' : ''} ${i.fresh ? 'drop' : ''}" data-id="${i.id}" data-open="${i.id}">
+    ${tile(i.name)}<div class="nm"><b>${esc(i.name)}</b><span data-sub>${fmt(i.size)} · ${i.segs.length} segments</span></div>${ring(p)}
+    <div class="meta"><span class="spd" data-spd></span><span class="eta" data-eta></span><span class="pri p${i.pri}">${PRN[i.pri]}</span><button class="pp" data-act="pp" data-id="${i.id}">${ppLabel(i)}</button></div>
+    <div class="bar"><i data-bar></i></div></article></div>`;
+}
+function ppLabel(i) { return i.status === 'paused' ? 'Resume' : i.status === 'failed' ? 'Retry' : 'Pause'; }
+function doneCard(i) {
+  return `<div class="sw" data-sw="${i.id}"><div class="del">Delete</div><article class="dl" data-view="${i.id}" data-id="${i.id}" style="grid-template-columns:44px 1fr auto">${tile(i.name)}<div class="nm"><b>${esc(i.name)}</b><span>${fmt(i.size)} · ${i.daysAgo === undefined ? 'Just now' : i.daysAgo === 0 ? 'Today' : i.daysAgo + 'd ago'}</span></div><span class="pri" style="color:var(--ok);border-color:var(--ok)">Done</span></article></div>`;
+}
+function renderLists() {
+  const t = L[S.lang], f = i => !S.q || fuzzy(S.q, i.name);
+  const act = sim.items.filter(i => i.status !== 'done' && f(i)).sort((a, b) => (b.status === 'running') - (a.status === 'running') || b.pri - a.pri || a.order - b.order);
+  const dn = sim.items.filter(i => i.status === 'done' && f(i)).sort((a, b) => (a.daysAgo ?? -1) - (b.daysAgo ?? -1));
+  $('lists').innerHTML = `<h2>${t.active} (${act.length})</h2><div class="list">${act.map(activeCard).join('') || '<div class="empty">Koi active download nahi.<br>+ dabao aur link paste karo.</div>'}</div>
+    <h2>${t.done} (${dn.length})</h2><div class="list">${dn.map(doneCard).join('') || '<div class="empty">Kuch nahi mila.</div>'}</div>`;
+  sim.items.forEach(i => i.fresh = false); sim.dirty = false; update();
+}
+function renderDetail() {
+  const i = sim.get(S.detail); if (!i) { S.screen = 'home'; return render(); }
+  const done = i.status === 'done', sha = S.sha[i.id];
+  const info = `<h2>File info</h2><section class="card"><dl class="info"><dt>Size</dt><dd>${fmt(i.size)}</dd><dt>URL</dt><dd>${esc(i.url || 'https://cdn.example.com/' + i.name)}</dd><dt>Save to</dt><dd>${i.folder ? 'Downloads/Vegam (tumhara chuna folder)' : 'Android/data/com.vegam.app/files/Vegam'}/${esc(i.name)}</dd><dt>Priority</dt><dd>${PRN[i.pri]}</dd><dt>Wi-Fi only</dt><dd>${i.wifi ? 'Yes' : 'No'}</dd>${done ? `<dt>SHA-256</dt><dd>${sha === 'busy' ? '<span class="tag">Calculating...</span>' : sha ? `<code style="overflow-wrap:anywhere;font-size:11px">${sha}</code>` : '<button class="go" data-act="sha" data-id="' + i.id + '" style="min-height:36px;padding:0 14px">Calculate</button>'}</dd>` : ''}</dl></section>`;
+  const head = `<button class="back" data-nav="home">← Back</button>
+  <section class="card"><div class="nm" style="display:flex;gap:12px;align-items:center">${tile(i.name)}<div style="min-width:0"><b style="display:block;overflow-wrap:anywhere">${esc(i.name)}</b><span class="tag" data-sub></span></div></div>
+  <div class="big">${done ? okCheck() : ring(i.prog / i.size, 168)}</div>
+  ${done ? '<p class="tag" style="text-align:center">Download poora hua ✓</p>' : `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span class="spd" data-spd style="font-size:22px"></span><span class="eta" data-eta style="flex:0 1 auto;text-align:right"></span></div>`}</section>`;
+  if (done) { $('app').innerHTML = head + info; return; }
+  const acts = S.confirm
+    ? `<section class="card" style="margin-top:14px"><b>Download cancel karein?</b><p class="tag">Adhoori file delete ho jayegi.</p><div class="acts"><button data-act="keep">Nahi, rehne do</button><button class="danger" data-act="del" data-id="${i.id}">Haan, cancel</button></div></section>`
+    : `<div class="acts" style="margin-top:14px"><button data-act="pp" data-id="${i.id}" id="ppd"></button><button class="danger" data-act="ask">Cancel</button></div>`;
+  $('app').innerHTML = head + `<h2>Segments (Vegam Engine)</h2><section class="card" id="segs">${i.segs.map((s, k) => `<div class="sg" data-seg="${k}"><span>#${k}</span><div class="bar"><i></i></div><span data-sp></span></div>`).join('')}</section>
+  <h2>Speed, last 60 seconds</h2><section class="card"><canvas id="cv" role="img" aria-label="Line chart of speed in MB per second over the last 60 seconds"></canvas></section>` + acts + info;
+}
+function renderStats() {
+  const done = sim.items.filter(i => i.status === 'done'), days = [0, 0, 0, 0, 0, 0, 0];
+  done.forEach(i => { const d = i.daysAgo === undefined ? 0 : i.daysAgo; if (d < 7) days[6 - d] += i.size; });
+  days[6] += sim.todayBytes;
+  const mx = Math.max(...days, 1), names = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], today = (new Date().getDay() + 6) % 7;
+  const by = {}; done.forEach(i => { const k = typeOf(i.name)[0]; by[k] = (by[k] || 0) + i.size; });
+  const tot = Object.values(by).reduce((a, b) => a + b, 0) || 1; let acc = 0;
+  const colors = {}; Object.keys(TYPES).forEach(k => colors[TYPES[k][0]] = TYPES[k][1]);
+  const grad = Object.entries(by).map(([k, v]) => { const a = acc / tot * 100; acc += v; return `${colors[k]} ${a}% ${acc / tot * 100}%`; }).join(',');
+  $('app').innerHTML = `<header class="hd"><div class="mark">Stats</div></header>
+  <section class="card"><dl class="stats" style="margin:0"><div><dt>Total downloaded</dt><dd data-s="tot"></dd></div><div><dt>Files</dt><dd>${done.length}</dd></div><div><dt>Aaj</dt><dd>${fmt(days[6])}</dd></div></dl>
+  <dl class="stats" style="margin:12px 0 0"><div><dt>Average</dt><dd>${fmt(done.length ? done.reduce((a, i) => a + i.size, 0) / done.length : 0)}</dd></div><div><dt>Failed</dt><dd>${sim.items.filter(i => i.status === 'failed').length}</dd></div><div><dt>Cancelled</dt><dd>${sim.cancelled}</dd></div></dl></section>
+  <h2>Pichhle 7 din</h2><section class="card"><div class="days">${days.map((v, k) => `<div><i style="height:${Math.max(4, v / mx * 100)}%"></i>${names[(today - 6 + k + 7) % 7]}</div>`).join('')}</div></section>
+  <h2>File type ke hisaab se</h2><section class="card pie"><div class="donut" style="background:conic-gradient(${grad || 'var(--line) 0 100%'})" role="img" aria-label="Storage split by file type"></div><div class="lg">${Object.entries(by).map(([k, v]) => `<span><u style="background:${colors[k]}"></u>${k} · ${fmt(v)}</span>`).join('')}</div></section>
+  `;
+}
+function renderSettings() {
+  const seg = (k, opts) => `<div class="seg" style="min-width:0">${opts.map(([v, n]) => `<button data-set="${k}" data-v="${v}" class="${S[k] === v ? 'on' : ''}">${n}</button>`).join('')}</div>`;
+  $('app').innerHTML = `<header class="hd"><div class="mark">Settings</div></header><section class="card">
+  <div class="row2"><label>Theme</label>${seg('theme', [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']])}</div>
+  <div class="row2"><label>Dynamic color<br><small class="tag">Wallpaper ke rang (Android 12+)</small></label><button class="sw2 ${S.dyn ? 'on' : ''}" data-act="dyn" aria-label="Dynamic color"><i></i></button></div>
+  <div class="row2"><label>Language <small class="tag">(preview only)</small></label>${seg('lang', [['en', 'English'], ['hi', 'हिन्दी'], ['hx', 'Hinglish']])}</div>
+  <div class="row2" style="display:block"><label>Ek saath kitni downloads: <b id="mpv">${sim.maxPar}</b></label><input type="range" id="mp" min="1" max="10" value="${sim.maxPar}"></div>
+  <div class="row2" style="display:block"><label>Default connections: <b id="sgv">${sim.segN}</b></label><input type="range" id="sg" min="1" max="16" value="${sim.segN}"></div>
+  <div class="row2"><label for="lim">Speed limit</label><select id="lim">${[0, 1, 2, 5, 10, 20, 50].map(v => `<option value="${v}">${v ? v + ' MB/s' : 'Unlimited'}</option>`).join('')}</select></div>
+  <div class="row2"><label>Naye downloads: Wi-Fi only</label><button class="sw2 ${S.wifiDef ? 'on' : ''}" data-act="wifidef" aria-label="Wi-Fi only default"><i></i></button></div>
+  <div class="row2"><label>Sirf charging par</label><button class="sw2 ${S.charging ? 'on' : ''}" data-act="chg" aria-label="Charging only"><i></i></button></div>
+  <div class="row2"><label>Save folder<br><small class="tag">${S.folder ? 'Downloads/Vegam (tumhara chuna)' : 'App folder (private)'}</small></label><button data-act="sfolder">${S.folder ? 'App folder' : 'Folder chuno'}</button></div>
+  <div class="row2"><label>Notifications <small class="tag">(preview only)</small></label><button class="sw2 ${S.notify ? 'on' : ''}" data-act="notify" aria-label="Toggle notifications"><i></i></button></div>
+  <div class="row2"><label>Welcome screens</label><button data-act="replay">Dobara dekho</button></div>
+  <div class="row2"><label for="dm">Demo speed</label><select id="dm"><option value="1">x1</option><option value="5">x5</option><option value="15">x15</option></select></div></section>
+  <p class="brand">Powered by Vegam Engine · v0.5 preview</p>`;
+  $('lim').value = String(sim.limit / MB); $('dm').value = String(sim.mult);
+}
+function renderSheet() {
+  const A = S.add, t = typeOf(A.name || 'x.bin');
+  $('sheet').innerHTML = `<div class="grab"></div><div class="mark st" style="--i:0;font-size:22px">Add download</div>
+  <div class="fld st" style="--i:1"><label for="url">Link paste karo</label><div style="display:flex;gap:8px"><input type="text" id="url" inputmode="url" autocomplete="off" placeholder="https://..." value="${esc(A.url)}" style="flex:1;min-width:0"><button data-act="paste" style="min-height:44px;padding:0 14px;border-radius:12px">Paste</button></div></div>
+  <div class="det st" style="--i:2">${A.loading ? '<div class="skel" style="width:44px;height:44px;border-radius:14px"></div><div style="flex:1;display:grid;gap:8px"><div class="skel"></div><div class="skel" style="width:55%"></div></div>'
+    : A.name ? `${tile(A.name)}<div style="min-width:0"><div style="min-width:0;flex:1"><input type="text" id="nm" value="${esc(A.name)}" aria-label="File name" style="width:100%;font-weight:700"><span class="tag">${fmt(A.size)} · ${t[0]} · Range supported</span></div></div>` : '<span class="tag">Link daalte hi naam, size aur type yahan dikhega.</span>'}</div>
+  <div class="fld st" style="--i:3"><label>Connections: <b id="cn">${A.segs}</b></label><input type="range" id="cr" min="1" max="16" value="${A.segs}"></div>
+  <div class="fld st" style="--i:4"><label>Priority</label><div class="seg">${PRN.map((n, k) => `<button data-pri="${k}" class="${A.pri === k ? 'on' : ''}">${n}</button>`).join('')}</div></div>
+  <div class="tg st" style="--i:5"><span>Wi-Fi only</span><button class="sw2 ${A.wifi ? 'on' : ''}" data-act="wifi" aria-label="Wi-Fi only"><i></i></button></div>
+  <div class="fld st" style="--i:6"><label>Kab shuru karein <small style="font-weight:500">(preview: 1 ghanta = 20s)</small></label><div class="seg" style="flex-wrap:wrap">${[['Abhi', 0], ['1 ghante baad', 20], ['Raat 2:00', 40]].map(w => `<button data-when="${w[1]}" class="${A.when === w[1] ? 'on' : ''}" style="min-width:90px">${w[0]}</button>`).join('')}</div></div>
+  <div class="tg st" style="--i:7"><span style="min-width:0">Save folder<br><small class="tag">${A.folder ? 'Downloads/Vegam (tumhara chuna)' : 'App folder (default)'}</small></span><button data-act="folder" style="min-height:40px;padding:0 14px;border-radius:12px">${A.folder ? 'App folder' : 'Folder chuno'}</button></div>
+  <button class="st go" style="--i:8;width:100%;margin-top:14px;border:0;color:#fff;background:linear-gradient(90deg,var(--c1),var(--c2));min-height:52px" data-act="start" ${A.name ? '' : 'disabled'}>Start download</button>`;
+}
+let detTimer;
+function detect() {
+  const A = S.add; clearTimeout(detTimer);
+  if (!/^https?:\/\/.+\/.+/.test(A.url)) { A.name = ''; A.loading = false; return renderSheet(); }
+  A.loading = true; renderSheet();
+  detTimer = setTimeout(() => {   // Prober.kt ka HEAD request simulate: 700ms shimmer
+    A.name = decodeURIComponent(A.url.split('?')[0].split('/').pop()) || 'download.bin';
+    A.size = (20 + hash(A.name) % 1500) * MB; A.loading = false; renderSheet();
+    const u = $('url'); if (u) { u.focus(); u.setSelectionRange(u.value.length, u.value.length); }
+  }, 700);
+}
+
+// ---------- live update ----------
+function update() {
+  const run = sim.running(), spd = sim.totalSpeed();
+  const tot = sim.items.filter(i => i.status === 'done').reduce((a, i) => a + i.size, 0) + sim.items.reduce((a, i) => a + (i.status !== 'done' ? i.prog : 0), 0);
+  document.querySelectorAll('[data-s]').forEach(el => { const k = el.dataset.s; el.textContent = k === 'tot' ? fmt(tot + 38.2 * GB) : k === 'spd' ? fmt(spd) + '/s' : fmt(sim.items.reduce((a, i) => a + (i.status === 'done' ? i.size : 0), 0) + 11.6 * GB); });
+  document.querySelectorAll('.dl[data-open]').forEach(card => paint(card, sim.get(+card.dataset.id)));
+  if (S.screen === 'detail') paintDetail();
+  paintShade();
+}
+function paint(root, i) {
+  if (!i) return; const p = i.prog / i.size, r = i.status === 'running';
+  root.classList.toggle('run', r);
+  const arc = root.querySelector('.arc'); if (arc) arc.style.strokeDashoffset = 326.7 * (1 - p);
+  const pc = root.querySelector('[data-pct]'); if (pc) pc.textContent = Math.floor(p * 100) + '%';
+  const bar = root.querySelector('[data-bar]'); if (bar) bar.style.width = (p * 100).toFixed(1) + '%';
+  const wait = i.at > sim.t ? 'Starts in ' + Math.ceil(i.at - sim.t) + 's' : 'Waiting';
+  ticker(root.querySelector('[data-spd]'), r ? (i.speed / MB).toFixed(1) + ' MB/s' : i.status === 'paused' ? 'Paused' : i.status === 'failed' ? 'Failed' : wait);
+  const eta = root.querySelector('[data-eta]'); if (eta) eta.textContent = i.status === 'failed' ? i.err : r ? 'ETA ' + fmtEta((i.size - i.prog) / i.speed) : fmt(i.prog) + ' / ' + fmt(i.size);
+}
+function paintDetail() {
+  const i = sim.get(S.detail); if (!i) return;
+  paint($('app'), i);
+  $('app').querySelectorAll('[data-sub]').forEach(e => e.textContent = `${fmt(i.size)} · ${i.status}`);
+  i.segs.forEach((s, k) => { const row = document.querySelector(`[data-seg="${k}"]`); if (!row) return; const q = s.d / (s.e - s.s + 1); row.firstChild.nextSibling.firstChild.style.width = (q * 100).toFixed(0) + '%'; row.querySelector('[data-sp]').textContent = Math.floor(q * 100) + '%'; row.classList.toggle('fin', q >= 1); });
+  const pd = $('ppd'); if (pd) pd.textContent = ppLabel(i);
+  drawGraph(i);
+}
+function drawGraph(i) {
+  const c = $('cv'); if (!c) return; const r = window.devicePixelRatio || 1, w = c.clientWidth, h = c.clientHeight;
+  if (c.width !== Math.round(w * r)) { c.width = Math.round(w * r); c.height = Math.round(h * r); }
+  const g = c.getContext('2d'); g.setTransform(r, 0, 0, r, 0, 0); g.clearRect(0, 0, w, h);
+  const st = getComputedStyle(document.documentElement), c1 = st.getPropertyValue('--c1').trim(), c2 = st.getPropertyValue('--c2').trim(), mu = st.getPropertyValue('--muted').trim(), ln = st.getPropertyValue('--line').trim();
+  const Lm = 30, B = 18, T = 8, pw = w - Lm - 6, ph = h - B - T, ymax = Math.max(4, Math.ceil(Math.max(...i.hist, 1) / MB / 4) * 4) * MB;
+  g.font = '11px Manrope,system-ui'; g.fillStyle = mu; g.strokeStyle = ln; g.textAlign = 'right'; g.textBaseline = 'middle';
+  [0, 1, 2].forEach(k => { const y = T + ph - ph * k / 2; g.beginPath(); g.moveTo(Lm, y); g.lineTo(w - 6, y); g.stroke(); g.fillText(Math.round(ymax * k / 2 / MB), Lm - 5, y); });
+  g.textAlign = 'left'; g.textBaseline = 'alphabetic'; g.fillText('60s ago', Lm, h - 3); g.textAlign = 'right'; g.fillText('now · MB/s', w - 6, h - 3);
+  const n = i.hist.length; if (n < 2) return;
+  const X = k => Lm + pw - (n - 1 - k) / 59 * pw, Y = v => T + ph - v / ymax * ph, gr = g.createLinearGradient(Lm, 0, w, 0); gr.addColorStop(0, c1); gr.addColorStop(1, c2);
+  g.beginPath(); i.hist.forEach((v, k) => k ? g.lineTo(X(k), Y(v)) : g.moveTo(X(k), Y(v))); g.lineTo(X(n - 1), T + ph); g.lineTo(X(0), T + ph); g.closePath(); g.globalAlpha = .16; g.fillStyle = gr; g.fill(); g.globalAlpha = 1;
+  g.beginPath(); i.hist.forEach((v, k) => k ? g.lineTo(X(k), Y(v)) : g.moveTo(X(k), Y(v))); g.strokeStyle = gr; g.lineWidth = 2.5; g.lineJoin = 'round'; g.stroke();
+  g.fillStyle = c2; g.beginPath(); g.arc(X(n - 1), Y(i.hist[n - 1]), 4, 0, 7); g.fill();
+}
+function paintShade() {
+  const i = sim.running()[0], n = $('ntf');
+  if (!S.shade) return;
+  if (!S.notify) { n.innerHTML = '<div class="t"><span class="ic"></span>Vegam</div><b>Notifications band hain</b><p>Settings mein ON karo.</p>'; return; }
+  if (!i) { n.innerHTML = '<div class="t"><span class="ic"></span>Vegam · now</div><b>Koi active download nahi</b><p>Download chalne par yahan progress dikhega.</p>'; return; }
+  n.innerHTML = `<div class="t"><span class="ic"></span>Vegam · now</div><b>${esc(i.name)}</b><p>${Math.floor(i.prog / i.size * 100)}% · ${fmt(i.speed)}/s · ETA ${fmtEta((i.size - i.prog) / i.speed)}</p><div class="bar"><i style="width:${(i.prog / i.size * 100).toFixed(1)}%"></i></div><button data-act="pp" data-id="${i.id}">Pause</button>`;
+}
+
+// ---------- events ----------
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-nav],[data-act],[data-open],[data-view],[data-when],[data-set],[data-acc],[data-pri]'); if (!t) { if (S.shade && !e.target.closest('#ntf')) { S.shade = false; $('shade').classList.remove('on'); } return; }
+  if (t.dataset.nav) { S.screen = t.dataset.nav; S.detail = null; buzz(8); return render(); }
+  if (t.dataset.set) { S[t.dataset.set] = t.dataset.v; if (t.dataset.set === 'theme') t.dataset.v === 'system' ? document.documentElement.removeAttribute('data-theme') : document.documentElement.setAttribute('data-theme', t.dataset.v); buzz(8); return render(); }
+  if (t.dataset.acc) { S.accent = +t.dataset.acc; const c = ACCENTS[S.accent]; document.documentElement.style.setProperty('--c1', c[0]); document.documentElement.style.setProperty('--c2', c[1]); buzz(8); return render(); }
+  if (t.dataset.pri) { S.add.pri = +t.dataset.pri; return renderSheet(); }
+  const a = t.dataset.act;
+  if (a === 'pp') { e.stopPropagation(); const i = sim.get(+t.dataset.id); i.status === 'paused' || i.status === 'failed' ? sim.resume(i.id) : sim.pause(i.id); buzz(i.status === 'queued' ? 40 : 8); if (S.screen === 'home') renderLists(); return update(); }
+  if (a === 'ask') { S.confirm = true; return render(); }
+  if (a === 'keep') { S.confirm = false; return render(); }
+  if (a === 'del') { S.confirm = false; sim.remove(+t.dataset.id); S.screen = 'home'; return render(); }
+  if (a === 'sha') { const id = +t.dataset.id, i = sim.get(id); S.sha[id] = 'busy'; renderDetail(); setTimeout(() => { let h = ''; for (let k = 0; k < 8; k++) h += (hash(i.name + k) >>> 0).toString(16).padStart(8, '0'); S.sha[id] = h; if (S.screen === 'detail' && S.detail === id) renderDetail(); }, 900); return; }
+  if (a === 'paste') { S.add.url = 'https://releases.example.org/files/Vegam-demo-' + (1 + hash(String(Date.now())) % 9) + '.zip'; buzz(10); return detect(); }
+  if (a === 'folder') { S.add.folder = !S.add.folder; return renderSheet(); }
+  if (t.dataset.when) { S.add.when = +t.dataset.when; return renderSheet(); }
+  if (a === 'shade') { S.shade = !S.shade; $('shade').classList.toggle('on', S.shade); return paintShade(); }
+  if (a === 'notify') { S.notify = !S.notify; return render(); }
+  if (a === 'dyn') { S.dyn = !S.dyn; const c = S.dyn ? ['#2e8b74', '#9ccc65'] : ACCENTS[0]; document.documentElement.style.setProperty('--c1', c[0]); document.documentElement.style.setProperty('--c2', c[1]); buzz(8); return render(); }
+  if (a === 'wifidef') { S.wifiDef = !S.wifiDef; return render(); }
+  if (a === 'chg') { S.charging = !S.charging; return render(); }
+  if (a === 'sfolder') { S.folder = !S.folder; return render(); }
+  if (a === 'wifi') { S.add.wifi = !S.add.wifi; return renderSheet(); }
+  if (a === 'start') { const A = S.add, it = sim.add(A.name, A.size, { segs: A.segs, pri: A.pri, wifi: A.wifi, url: A.url, at: A.when ? sim.t + A.when : 0 }); it.folder = A.folder; buzz(40); closeSheet(); S.screen = 'home'; render(); return; }
+  const vw = t.dataset.open || t.dataset.view;
+  if (vw && !e.target.closest('button')) { S.screen = 'detail'; S.detail = +vw; S.confirm = false; render(); }
+});
+$('fab').onclick = () => { S.add = { url: '', name: '', size: 0, loading: false, segs: sim.segN, pri: 1, wifi: S.wifiDef, when: 0, folder: S.folder }; renderSheet(); $('sheet').classList.add('on'); $('scrim').classList.add('on'); buzz(10); };
+function closeSheet() { $('sheet').classList.remove('on'); $('scrim').classList.remove('on'); }
+$('scrim').onclick = closeSheet;
+document.addEventListener('input', e => {
+  if (e.target.id === 'q') { S.q = e.target.value; renderLists(); }
+  else if (e.target.id === 'url') { S.add.url = e.target.value.trim(); clearTimeout(detTimer); detTimer = setTimeout(detect, 350); }
+  else if (e.target.id === 'nm') S.add.name = e.target.value.trim() || S.add.name;
+  else if (e.target.id === 'cr') { S.add.segs = +e.target.value; $('cn').textContent = e.target.value; }
+  else if (e.target.id === 'mp') { sim.maxPar = +e.target.value; $('mpv').textContent = e.target.value; sim.pump(); }
+  else if (e.target.id === 'sg') { sim.segN = +e.target.value; $('sgv').textContent = e.target.value; }
+  else if (e.target.id === 'lim') sim.limit = +e.target.value * MB;
+  else if (e.target.id === 'dm') sim.mult = +e.target.value;
+});
+// swipe-to-delete (haptic ke saath)
+let sw = null;
+document.addEventListener('pointerdown', e => { const c = e.target.closest('.dl'); if (c && !e.target.closest('button')) sw = { c, x: e.clientX, y: e.clientY, dx: 0, lock: false }; });
+document.addEventListener('pointermove', e => { if (!sw) return; const dx = e.clientX - sw.x, dy = e.clientY - sw.y; if (!sw.lock && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) sw.lock = true; if (sw.lock) { sw.dx = Math.min(0, dx); sw.c.style.transition = 'none'; sw.c.style.transform = `translateX(${sw.dx}px)`; } });
+const endSwipe = () => { if (!sw) return; const { c, dx } = sw; sw = null; c.style.transition = ''; if (dx < -110) { buzz(25); sim.remove(+c.dataset.id); renderLists(); } else c.style.transform = ''; };
+document.addEventListener('pointerup', endSwipe); document.addEventListener('pointercancel', endSwipe);
+
+// ---------- onboarding ----------
+const onb = $('onb'), pages = $('pages'), pgs = [...pages.children];
+function onbIndex() { return Math.round(pages.scrollLeft / pages.clientWidth); }
+function onbPaint() {
+  const w = pages.clientWidth, idx = onbIndex();
+  pgs.forEach((p, i) => {
+    const off = (pages.scrollLeft - i * w) / w;   // parallax: illustration, text se alag raftaar se hilti hai
+    const art = p.querySelector('.art'), tx = p.querySelector('.tx');
+    if (art) art.style.transform = `translateX(${(-off * 70).toFixed(1)}px)`;
+    if (tx) tx.style.transform = `translateX(${(-off * 22).toFixed(1)}px)`;
+    p.classList.toggle('act', i === idx);
+  });
+  $('dots').innerHTML = pgs.map((_, i) => `<i class="${i === idx ? 'on' : ''}"></i>`).join('');
+  $('onbNext').textContent = idx === pgs.length - 1 ? 'Get started' : 'Next';
+  $('onbSkip').style.visibility = idx === pgs.length - 1 ? 'hidden' : 'visible';
+}
+function showOnb() { onb.hidden = false; pages.scrollLeft = 0; onbPaint(); }
+function endOnb() { onb.hidden = true; try { localStorage.setItem('vegam-onb', '1'); } catch (e) { } }
+pages.addEventListener('scroll', () => requestAnimationFrame(onbPaint));
+$('onbNext').onclick = () => { const i = onbIndex(); if (i >= pgs.length - 1) endOnb(); else pages.scrollTo({ left: (i + 1) * pages.clientWidth, behavior: 'smooth' }); };
+$('onbSkip').onclick = endOnb;
+$('permN').onclick = e => { e.target.outerHTML = '<span class="ok">Allowed</span>'; buzz(10); };   // preview: asli permission nahi maangta
+document.addEventListener('click', e => { if (e.target.closest('[data-act=replay]')) { showOnb(); } });
+function maybeOnb() { let seen = false; try { seen = localStorage.getItem('vegam-onb') === '1'; } catch (e) { } if (!seen) showOnb(); }
+
+// ---------- loop ----------
+render();
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+$('splogo').innerHTML = logo();
+setTimeout(() => $('splash').classList.add('out'), reduce ? 0 : 1700);
+setTimeout(maybeOnb, reduce ? 0 : 1500);
+setInterval(() => {
+  const before = sim.items.filter(i => i.status === 'done').length;
+  for (let k = 0; k < sim.mult; k++) sim.step(0.1);
+  if (sim.items.filter(i => i.status === 'done').length > before) buzz(60);
+  if (sim.dirty && S.screen === 'home' && !sw) renderLists();
+  update();
+}, 100);
+</script>
+
+<script>
+/* ===== Smart Detection simulator (preview only: asli logic Kotlin mein hai, yahan sirf dikhane ke liye scenarios) ===== */
+const SM = { on: { clip: true, analysis: true, dup: true, valid: true, sec: true, notif: true, hist: true, bg: true }, hist: [], q: '', f: 'all', cur: null, adv: false, conf: false };
+const SC = {
+  green: { name: 'Vegam-demo.zip', size: 48.2 * MB, dom: 'cdn.example.com', url: 'https://cdn.example.com/files/Vegam-demo.zip', http: 200, ranges: true, link: ['Link chal raha hai (HTTP 200)', 'ok'], dup: 'none', sec: 'GREEN', warn: [], conf: [], can: true, eng: ['Poori tarah compatible', 'ok'], mime: 'application/zip' },
+  yellow: { name: 'setup-tool.apk', size: 12.4 * MB, dom: 'files.example.net', url: 'http://files.example.net/setup-tool.apk', http: 200, ranges: true, link: ['Link chal raha hai (HTTP 200)', 'ok'], dup: 'none', sec: 'YELLOW', warn: ['Ye link HTTP hai: raste mein koi file badal sakta hai.', 'APK app install karti hai: sirf bharosemand source se. Signature download ke baad hi padha ja sakta hai.'], conf: ['Link HTTP hai (secure nahi)', 'File ek Android app (APK) hai'], can: true, eng: ['Poori tarah compatible', 'ok'], mime: 'application/vnd.android.package-archive', alt: 'https://files.example.net/setup-tool.apk' },
+  red: { name: 'invoice.pdf.exe', size: 2.1 * MB, dom: 'mail-docs.example', url: 'https://mail-docs.example/invoice.pdf.exe', http: 200, ranges: true, link: ['Link chal raha hai (HTTP 200)', 'ok'], dup: 'none', sec: 'RED', warn: ['Naam document jaisa hai par asli extension .exe hai (double extension).'], conf: [], can: false, block: 'Zyada khatra: naam PDF jaisa dikhta hai par file executable hai. Vegam ise download nahi karega.', eng: ['Poori tarah compatible', 'ok'], mime: 'application/x-msdownload' },
+  dup: { name: 'holiday-movie.mp4', size: 702 * MB, dom: 'media.example.org', url: 'https://media.example.org/holiday-movie.mp4?utm_source=wa', http: 200, ranges: true, link: ['Link chal raha hai (HTTP 200)', 'ok'], dup: 'Ye file pehle download ho chuki hai (same link, same size, file abhi phone mein hai).', sec: 'GREEN', warn: [], conf: ['Ye file pehle se download ho chuki hai. Dobara download = nayi copy (purani overwrite nahi hogi).'], can: true, eng: ['Poori tarah compatible', 'ok'], mime: 'video/mp4' },
+  expired: { name: 'report-2026.pdf', size: 0, dom: 'bucket.s3.example.com', url: 'https://bucket.s3.example.com/report-2026.pdf?X-Amz-Date=20261101T000000Z&X-Amz-Expires=3600&X-Amz-Signature=...', http: 403, ranges: null, link: ['Link ki likhi hui expiry beet chuki hai (HTTP 403)', 'bad'], dup: 'none', sec: 'GREEN', warn: ['URL ke andar likha signed-expiry samay nikal chuka hai aur server ne 403 diya. Naya link wahin se lo jahan se ye mila.'], conf: ['Link expire dikh raha hai: download fail ho sakta hai'], can: true, eng: ['Size pata nahi', 'warn'], mime: null },
+  nosize: { name: 'live-export.csv', size: 0, dom: 'api.example.io', url: 'https://api.example.io/export/live-export.csv', http: 200, ranges: false, link: ['Link chal raha hai (HTTP 200)', 'ok'], dup: 'none', sec: 'GREEN', warn: [], conf: [], can: false, block: 'Server file ka size nahi batata (Content-Length nahi). Vegam engine abhi aise downloads support nahi karta.', manual: true, eng: ['Download possible nahi (size unknown)', 'bad'], mime: 'text/csv' },
+};
+const SMC = { ok: 'var(--ok)', warn: 'var(--hi)', bad: 'var(--bad)', n: 'var(--muted)' };
+const smRow = (l, v, c) => `<div style="display:flex;gap:10px;margin-top:8px;font-size:13px"><span style="flex:0 0 30%;color:var(--muted);font-weight:700">${l}</span><span style="flex:1;min-width:0;overflow-wrap:anywhere;color:${SMC[c || 'n']}">${v}</span></div>`;
+function smShow() { $('sheet').classList.add('on'); $('scrim').classList.add('on'); }
+function smOpen(k) {
+  SM.cur = SC[k]; SM.adv = false; SM.conf = false; smShow(); buzz(10);
+  const steps = ['Link samajh raha hoon…', 'Server se baat ho rahi hai…', 'File ki jaankari padh raha hoon…', 'Link jaanch raha hoon…'];
+  if (!SM.on.analysis) return smPaint();
+  let n = 0; const tick = () => { if (!SM.cur) return; if (n < steps.length) { smAnalyzing(steps[n++]); SM.t = setTimeout(tick, 380); } else smPaint(); }; tick();
+}
+function smAnalyzing(txt) {
+  $('sheet').innerHTML = `<div class="grab"></div><div class="mark" style="font-size:22px">Vegam se download?</div><p class="tag" style="overflow-wrap:anywhere">${esc(SM.cur.url)}</p><div class="skel" style="height:6px;margin:12px 0"></div><p>${txt}</p><button data-sm="cancel" style="width:100%;min-height:48px">Cancel</button>`;
+}
+function smPaint() {
+  const c = SM.cur, o = SM.on;
+  if (SM.conf) { $('sheet').innerHTML = `<div class="grab"></div><div class="mark" style="font-size:22px">Pakka download karein?</div>${c.conf.map(x => `<p style="margin:8px 0">• ${esc(x)}</p>`).join('')}<div style="display:flex;gap:8px;margin-top:14px"><button data-sm="back" style="flex:1;min-height:48px">Wapas</button><button data-sm="go" style="flex:1;min-height:48px;border:0;color:#fff;background:var(--hi)">Phir bhi download</button></div>`; return; }
+  const rows = [smRow('Link', o.valid ? c.link[0] : 'Jaanch band hai', o.valid ? c.link[1] : 'n')];
+  if (o.analysis) rows.push(smRow('Server', c.ranges === true ? 'Resume / multi-connection supported' : c.ranges === false ? 'Resume supported nahi (1 connection)' : 'Resume ka pata nahi', c.ranges === false ? 'warn' : 'n'));
+  if (o.dup) rows.push(smRow('Duplicate', c.dup === 'none' ? 'Koi duplicate nahi mila' : c.dup, c.dup === 'none' ? 'n' : 'warn'));
+  rows.push(smRow('Vegam engine', c.eng[0], c.eng[1]));
+  if (o.sec) rows.push(smRow('Security', c.sec === 'GREEN' ? 'Koi jaana-pehchana risk nahi mila (ye guarantee nahi hai)' : c.sec === 'YELLOW' ? 'Savdhaani: kuch sanket mile' : 'Zyada khatra: download block', c.sec === 'GREEN' ? 'ok' : c.sec === 'YELLOW' ? 'warn' : 'bad'));
+  const warns = o.sec ? c.warn : [];
+  const blocked = !c.can || (o.sec && c.sec === 'RED');
+  const adv = SM.adv ? `<div class="tag" style="margin-top:6px;overflow-wrap:anywhere;line-height:1.7">URL: ${esc(c.url)}<br>MIME: ${c.mime || '-'}<br>HTTP: ${c.http}<br>Jaanch ka tareeka: HEAD · 1 koshish</div>` : '';
+  $('sheet').innerHTML = `<div class="grab"></div><div style="display:flex;gap:12px;align-items:center">${tile(c.name)}<div style="min-width:0"><b style="overflow-wrap:anywhere">${esc(c.name)}</b><div class="tag">${c.size ? fmt(c.size) : 'Size pata nahi'} · ${c.dom}</div></div></div>
+  ${rows.join('')}${warns.length ? `<p style="margin:12px 0 4px;font-weight:800;font-size:13px">Dhyan dein</p>${warns.map(w => `<p class="tag" style="margin:4px 0">• ${esc(w)}</p>`).join('')}` : ''}
+  <button data-sm="adv" style="background:none;border:0;color:var(--accent-text);font-weight:800;margin-top:8px;min-height:40px">ADVANCED DETAILS ${SM.adv ? '▲' : '▼'}</button>${adv}
+  ${blocked ? `<p style="color:var(--bad);font-weight:800;margin:10px 0">${esc(c.block || 'Zyada khatra: Vegam ise download nahi karega.')}</p>` : ''}
+  ${c.alt && !blocked ? '<button data-sm="alt" style="width:100%;min-height:44px;margin-top:6px">HTTPS wala link try karo (aapki ijazat se)</button>' : ''}
+  ${c.manual ? '<button data-sm="manual" style="width:100%;min-height:44px;margin-top:6px">Add screen mein kholo (manual)</button>' : ''}
+  <div style="display:flex;gap:8px;margin-top:14px"><button data-sm="cancel" style="flex:1;min-height:52px">${blocked ? 'Band karo' : 'CANCEL'}</button>${blocked ? '' : '<button data-sm="dl" style="flex:1;min-height:52px;border:0;color:#fff;background:linear-gradient(90deg,var(--c1),var(--c2))">DOWNLOAD</button>'}</div>`;
+}
+function smLog(decision) { const c = SM.cur; if (!c || !SM.on.hist) return; SM.hist.unshift({ name: c.name, dom: c.dom, size: c.size, decision, t: new Date().toLocaleTimeString() }); }
+function smClose() { clearTimeout(SM.t); SM.cur = null; closeSheet(); }
+function smApp() {
+  const o = SM.on, T = (k, l, sub) => `<div class="row2"><label>${l}${sub ? `<br><small class="tag">${sub}</small>` : ''}</label><button class="sw2 ${o[k] ? 'on' : ''}" data-sm="t:${k}" aria-label="${l}"><i></i></button></div>`;
+  const hs = SM.hist.filter(h => (SM.f === 'all' || (SM.f === 'dl' && h.decision === 'DOWNLOAD') || (SM.f === 'cx' && h.decision === 'CANCEL') || (SM.f === 'bl' && h.decision === 'BLOCKED')) && (!SM.q || (h.name + h.dom).toLowerCase().includes(SM.q.toLowerCase())));
+  const sec = document.createElement('div'); sec.id = 'smsec';
+  sec.innerHTML = `<h2 style="margin-top:18px">Smart Detection Settings</h2><section class="card">
+  ${T('clip', 'Clipboard Detection', 'Copy kiya link app khulte hi pakadna')}
+  <div class="row2"><label>Browser Integration</label><button data-sm="browser">Configure</button></div>
+  ${T('analysis', 'Smart Link Analysis', 'HEAD / chhota Range request')}${T('dup', 'Duplicate Detection')}${T('valid', 'Link Validation')}${T('sec', 'Security Check', 'Antivirus nahi: sirf simple local niyam')}
+  ${T('notif', 'Download Notifications')}${T('hist', 'Detection History', 'Sirf phone par')}${T('bg', 'Background Analysis')}</section>
+  <h2 style="margin-top:18px">Smart dialog try karo <small class="tag">(preview: nakli servers)</small></h2><section class="card"><div class="seg" style="flex-wrap:wrap;gap:8px">
+  ${[['green', 'Green'], ['yellow', 'Yellow (HTTP+APK)'], ['red', 'Red (.pdf.exe)'], ['dup', 'Duplicate'], ['expired', 'Expired link'], ['nosize', 'Size nahi']].map(x => `<button data-sm="sc:${x[0]}" style="min-width:90px">${x[1]}</button>`).join('')}</div></section>
+  <h2 style="margin-top:18px">Detection History</h2><section class="card"><input type="search" id="smq" placeholder="Naam ya domain" value="${esc(SM.q)}" aria-label="Search history"><div class="seg" style="margin:10px 0;flex-wrap:wrap">${[['all', 'All'], ['dl', 'Downloaded'], ['cx', 'Cancelled'], ['bl', 'Blocked']].map(x => `<button data-sm="f:${x[0]}" class="${SM.f === x[0] ? 'on' : ''}">${x[1]}</button>`).join('')}</div>
+  ${hs.length ? hs.map(h => `<div style="padding:10px 0;border-top:1px solid var(--line)"><b style="overflow-wrap:anywhere">${esc(h.name)}</b><div class="tag">${h.dom} · ${h.size ? fmt(h.size) : 'size ?'} · ${h.decision === 'DOWNLOAD' ? 'Download shuru' : h.decision === 'BLOCKED' ? 'Block' : 'Cancel'} · ${h.t}</div></div>`).join('') : '<p class="tag">Abhi kuch nahi.</p>'}
+  ${SM.hist.length ? '<button data-sm="clear" style="margin-top:10px">Sab saaf</button>' : ''}</section>`;
+  $('app').appendChild(sec);
+  const q = $('smq'); if (q) q.oninput = e => { SM.q = e.target.value; const pos = e.target.selectionStart; smRefresh(); const n = $('smq'); n.focus(); n.setSelectionRange(pos, pos); };
+}
+function smRefresh() { const old = $('smsec'); if (old) old.remove(); smApp(); }
+const _rs = renderSettings; renderSettings = function () { _rs(); smApp(); };
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-sm]'); if (!t) return; const a = t.dataset.sm;
+  if (a.startsWith('t:')) { const k = a.slice(2); SM.on[k] = !SM.on[k]; return smRefresh(); }
+  if (a.startsWith('sc:')) return smOpen(a.slice(3));
+  if (a.startsWith('f:')) { SM.f = a.slice(2); return smRefresh(); }
+  if (a === 'clear') { SM.hist = []; return smRefresh(); }
+  if (a === 'cancel') { smLog(SM.cur && (!SM.cur.can || (SM.on.sec && SM.cur.sec === 'RED')) ? 'BLOCKED' : 'CANCEL'); smClose(); if (S.screen === 'settings') smRefresh(); return; }
+  if (a === 'adv') { SM.adv = !SM.adv; return smPaint(); }
+  if (a === 'back') { SM.conf = false; return smPaint(); }
+  if (a === 'alt') { SM.cur = { ...SM.cur, url: SM.cur.alt, warn: [], conf: [], sec: 'GREEN', alt: null }; return smPaint(); }
+  if (a === 'manual') { smLog('CANCEL'); smClose(); S.add = { url: '', name: '', size: 0, loading: false, segs: sim.segN, pri: 1, wifi: S.wifiDef, when: 0, folder: S.folder }; renderSheet(); smShow(); return; }
+  if (a === 'dl' && SM.cur.conf.length && SM.on.sec) { SM.conf = true; return smPaint(); }
+  if (a === 'dl' || a === 'go') { const c = SM.cur; sim.add(c.name, c.size || 5 * MB, { segs: sim.segN, pri: 1, wifi: S.wifiDef, url: c.url }); smLog('DOWNLOAD'); buzz(40); smClose(); S.screen = 'home'; render(); return; }
+  if (a === 'browser') {
+    SM.cur = null; smShow();
+    $('sheet').innerHTML = `<div class="grab"></div><div class="mark" style="font-size:22px">Browser Integration</div><p class="tag">Android dusre browser ke downloads zabardasti lene nahi deta. Vegam kisi browser ki setting chupke se nahi badalta.</p>
+    <p style="margin:10px 0"><b>Chrome / Edge / Brave</b><br><span class="tag">Sirf Share ya link copy. Seedha intercept nahi hota.</span></p><p style="margin:10px 0"><b>Firefox</b><br><span class="tag">Device par verify karna baaki hai. Share sabse pakka.</span></p><p style="margin:10px 0"><b>Samsung Internet</b><br><span class="tag">Device par verify karna baaki hai.</span></p><p style="margin:10px 0"><b>Doosre apps</b><br><span class="tag">Open with / Share kaam karta hai.</span></p><button data-sm="cancel" style="width:100%;min-height:48px;margin-top:8px">Band karo</button>`;
+  }
+});
+</script>

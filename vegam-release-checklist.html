@@ -1,0 +1,53 @@
+<title>Vegam Release Checklist</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+:root{--bg:#f7f7fc;--card:#fff;--fg:#16162b;--mut:#5b5b79;--line:#e0e0f1;--c1:#6c5ce7;--c2:#00b8d4;--ok:#16a34a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121218;--card:#1b1b25;--fg:#f2f2fb;--mut:#a6a6c2;--line:#2f2f45;--ok:#4ade80;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121218;--card:#1b1b25;--fg:#f2f2fb;--mut:#a6a6c2;--line:#2f2f45;--ok:#4ade80;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:Inter,system-ui,sans-serif;line-height:1.5;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:640px;margin:0 auto}
+h1{font-size:26px;margin:0;background:linear-gradient(90deg,var(--c1),var(--c2));-webkit-background-clip:text;background-clip:text;color:transparent;text-wrap:balance}
+.sub{color:var(--mut);margin:4px 0 16px;font-size:14px}
+.prog{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:10px 0}
+.bar{height:10px;border-radius:99px;background:var(--line);overflow:hidden}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--c1),var(--c2));transition:width .35s cubic-bezier(.34,1.56,.64,1)}
+.pl{display:flex;justify-content:space-between;font-size:13px;color:var(--mut);margin-top:6px}
+details{background:var(--card);border:1px solid var(--line);border-radius:24px;margin:14px 0;overflow:hidden}
+summary{list-style:none;cursor:pointer;padding:16px;font-weight:700;display:flex;justify-content:space-between;gap:10px;min-height:48px;align-items:center}
+summary::-webkit-details-marker{display:none}
+summary small{color:var(--mut);font-weight:600}
+.it{border-top:1px solid var(--line);padding:12px 16px;display:grid;grid-template-columns:28px 1fr;gap:12px}
+.it input{width:24px;height:24px;accent-color:var(--c1);margin:2px 0 0}
+.it b{display:block}.it p{margin:4px 0;font-size:14px;color:var(--mut);min-width:0;overflow-wrap:anywhere}
+.it .ok{font-size:13px;color:var(--fg)}.it .ok span{color:var(--ok);font-weight:700}
+.it.done b{text-decoration:line-through;color:var(--mut)}
+button{font:inherit;min-height:44px;padding:0 16px;border-radius:16px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer}
+.foot{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+</style>
+<main>
+<h1>Vegam Release Checklist</h1>
+<p class="sub">Phone par asli test aur Play Store tak ka rasta. Tick browser mein save hote hain.</p>
+<div class="prog"><div class="bar"><i id="fill"></i></div><div class="pl"><span id="cnt"></span><span id="pct"></span></div></div>
+<div id="root"></div>
+<div class="foot"><button id="reset">Sab tick hatao</button></div>
+</main>
+<script>
+const DATA = [["Real-world tests (phone par)", [["t1", "1GB+ file, Wi-Fi", "Koi 1GB+ file jiske server par Range support ho (Add sheet mein 'Range supported' dikhe). 8 connections par poori download karo.", "Download 100% tak pahunche, Detail mein 8 segment bars chalein, aakhir mein SHA-256 server ke published checksum se match kare."], ["t2", "Kill ke baad resume", "Download 30-40% par recents se Vegam swipe karke band karo, 1 minute ruko, app dobara kholo.", "Notification wapas aaye ya Home mein item Paused/Running dikhe, progress pichhle % se aage badhe (0% se nahi)."], ["t3", "Reboot ke baad resume", "Chalti download ke beech phone restart karo.", "Restart ke baad app kholne par download wahin se aage chale. (Background se auto-start Android ki restriction par depend karta hai.)"], ["t4", "Net toot-jud", "Download ke beech 20 second Airplane mode ON, phir OFF.", "Download crash na ho, retry karke khud aage badhe. Final file SHA-256 match."], ["t5", "Speed limit", "Settings mein Speed limit 1 MB/s karo, download chalao.", "Notification/Home par speed ~1 MB/s ke aas-paas rahe. Unlimited karne par turant badhe."], ["t6", "Server 429/503", "Aisa server/link jo kabhi kabhi 429/503 de (ya bahut saari parallel downloads).", "Connections ghatke 4->2->1 ho, download poori ho, baad mein connections wapas badhein."], ["t7", "Wi-Fi only", "Wi-Fi only ON karke mobile data par download shuru karo.", "Download ruki rahe; Wi-Fi par aate hi chale."], ["t8", "Schedule", "'1 ghante baad' ya custom time (2-3 minute baad) lagao.", "Item Queued dikhe aur samay par khud shuru ho."], ["t9", "Queue / max parallel", "Settings mein max parallel 2 karo, 5 downloads add karo. Phir max parallel 4 karo.", "Sirf 2 chalein; max badhane par turant 4 chalein. Ghatane par chalti wali nahi rukti."], ["t10", "Storage kam", "Phone mein kam jagah ho tab badi file add karo.", "Saaf error dikhe (crash nahi), file adhoori nahi chhute."], ["t11", "SAF folder", "Settings se 'Folder chuno' (Downloads/Vegam). Chhoti file download karo.", "File chune folder mein aaye aur app-private copy delete ho jaye."], ["t12", "Share -> Vegam", "Chrome mein kisi link par Share -> Vegam.", "Add sheet link ke saath khule, naam/size aaye."], ["t13", "Notification permission deny", "Onboarding mein notification Allow na karo.", "Download phir bhi chale; notification nahi aaye, app crash na ho."], ["t14", "Android 14/15", "Android 14 ya 15 phone par 10 minute se lambi download.", "Foreground service band na ho. (Android 15 mein dataSync ki 6 ghante ki limit hai: 6h+ downloads par dhyan do.)"]]], ["Release build", [["r1", "Actions green", "Debug build + saare unit tests CI mein green.", "Actions tab mein 'Vegam build' ka tick."], ["r2", "Keystore banao", "'Create keystore' workflow chalao, secrets.txt se 3 secrets (VEGAM_KEYSTORE_BASE64, VEGAM_KEYSTORE_PASSWORD, VEGAM_KEY_ALIAS) repo mein daalo, artifact delete karo.", "Settings -> Secrets mein teeno dikhein."], ["r3", "Keystore backup", "vegam-release.jks aur password kisi safe jagah (do jagah) rakho.", "Kho gayi to Play Store par app update nahi hogi."], ["r4", "Release run", "'Vegam release' workflow chalao.", "Artifacts mein .aab, .apk aur mapping.txt aaye."], ["r5", "Release APK test", "Release APK phone par install karke t1, t2, t4 dobara chalao (R8 ke baad kuch toota to nahi).", "Debug jaisa hi behaviour; koi crash nahi."], ["r6", "mapping.txt save", "Har release ka mapping.txt rakho (Play Console mein upload).", "Crash reports readable rahenge."]]], ["Play Store", [["p1", "Developer account", "Play Console developer account (ek baar ka $25 fee).", "Account verify ho chuka."], ["p2", "Privacy policy URL", "store/PRIVACY_POLICY.md ko public URL par rakho (jaise GitHub Pages ya public gist), email apna daalo.", "URL browser mein khule."], ["p3", "Listing", "store/STORE_LISTING.md se title, short/full description, category daalo.", "Listing preview theek."], ["p4", "Screenshots", "Kam se kam 2 phone screenshots (Home, Detail, Add, Stats). 1080x1920 ya similar. Preview artifact se bhi liye ja sakte hain.", "Play Console accept kare."], ["p5", "Data safety form", "store/DATA_SAFETY.md ke jawab copy karo.", "Form submit."], ["p6", "Foreground service declaration", "Play Console mein 'dataSync' FGS ka declaration bharo, store/DATA_SAFETY.md ka justification text use karo, 30 second ka demo video (download chalte hue notification).", "Declaration approved."], ["p7", "Content rating", "Questionnaire bharo (koi violence/ads nahi).", "Rating mil gayi."], ["p8", "Internal testing", "AAB internal testing track par daalo, 2-3 phone par install karke dekho.", "Install + download chale."], ["p9", "Production", "Internal test theek ho to production par bhejo.", "Review mein bhej diya."]]]];
+const KEY = 'vegam-checklist-v1';
+let st = {};
+try { st = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { st = {}; }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+const esc = s => s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+function paint() {
+  const all = DATA.flatMap(s => s[1]), done = all.filter(i => st[i[0]]).length;
+  document.getElementById('fill').style.width = (done / all.length * 100) + '%';
+  document.getElementById('cnt').textContent = done + ' / ' + all.length + ' complete';
+  document.getElementById('pct').textContent = Math.round(done / all.length * 100) + '%';
+  DATA.forEach((s, k) => { const el = document.getElementById('c' + k); if (el) el.textContent = s[1].filter(i => st[i[0]]).length + '/' + s[1].length; });
+  document.querySelectorAll('.it').forEach(e => e.classList.toggle('done', !!st[e.dataset.id]));
+}
+document.getElementById('root').innerHTML = DATA.map((s, k) => `<details ${k === 0 ? 'open' : ''}><summary><span>${esc(s[0])}</span><small id="c${k}"></small></summary>${s[1].map(i => `<label class="it" data-id="${i[0]}"><input type="checkbox" data-id="${i[0]}" ${st[i[0]] ? 'checked' : ''}><span><b>${esc(i[1])}</b><p>${esc(i[2])}</p><p class="ok"><span>Pass:</span> ${esc(i[3])}</p></span></label>`).join('')}</details>`).join('');
+document.addEventListener('change', e => { if (e.target.dataset.id) { st[e.target.dataset.id] = e.target.checked; save(); paint(); } });
+document.getElementById('reset').onclick = () => { st = {}; save(); document.querySelectorAll('input[type=checkbox]').forEach(c => c.checked = false); paint(); };
+paint();
+</script>

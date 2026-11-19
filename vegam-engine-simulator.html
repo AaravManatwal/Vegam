@@ -1,0 +1,391 @@
+<title>Vegam Engine Simulator</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&family=Noto+Sans+Devanagari:wght@700&display=swap">
+<style>
+/* Layout: ek single column, hero ring upar, controls, phir engine ke teen live views (file map, speed graph, segments). */
+:root{
+  --bg:#f7f7fc; --surface:#ffffff; --surface2:#ececf8; --fg:#16162b; --muted:#5b5b79; --line:#dcdcef;
+  --indigo:#6c5ce7; --cyan:#00b8d4; --accent-text:#4a3bc9; --warn:#b45309; --ok:#0f766e;
+  --glow1:rgba(108,92,231,.16); --glow2:rgba(0,184,212,.13);
+  --font:'Manrope',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --font-dev:'Noto Sans Devanagari','Manrope',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121212; --surface:#1b1b25; --surface2:#262636; --fg:#f2f2fb; --muted:#a6a6c2; --line:#2f2f45;
+  --accent-text:#a197ff; --warn:#fbbf24; --ok:#5eead4; --glow1:rgba(108,92,231,.28); --glow2:rgba(0,184,212,.18); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121212; --surface:#1b1b25; --surface2:#262636; --fg:#f2f2fb; --muted:#a6a6c2; --line:#2f2f45;
+  --accent-text:#a197ff; --warn:#fbbf24; --ok:#5eead4; --glow1:rgba(108,92,231,.28); --glow2:rgba(0,184,212,.18); color-scheme:dark}
+body{
+  background:radial-gradient(48rem 26rem at 95% -8%,var(--glow1),transparent 70%),
+             radial-gradient(40rem 22rem at -10% 8%,var(--glow2),transparent 70%),var(--bg);
+  color:var(--fg); font-family:var(--font); font-size:15px; line-height:1.5}
+*{box-sizing:border-box}
+.wrap{max-width:720px;margin:0 auto;padding-block:20px 40px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:14px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.mark{font-family:var(--font-dev);font-weight:700;font-size:28px;line-height:1.1;
+  background:linear-gradient(90deg,var(--indigo),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--muted);font-size:13px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:4px 12px;font-size:13px;font-weight:600}
+.chip.run{color:var(--accent-text);border-color:var(--indigo)} .chip.done{color:var(--ok);border-color:var(--ok)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:18px;min-width:0}
+h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800;margin:0 0 12px}
+.hero{display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center}
+.ring{position:relative;width:132px;height:132px}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .track{stroke:var(--surface2)}
+.ring .arc{transition:stroke-dashoffset .12s linear}
+.ring.on .arc{filter:drop-shadow(0 0 5px rgba(108,92,231,.55))}
+.ringtxt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ringtxt b{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums}
+.ringtxt span{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;margin:0;min-width:0}
+.stats dt{font-size:12px;color:var(--muted)} .stats dd{margin:0;font-weight:800;font-size:17px;font-variant-numeric:tabular-nums}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+label{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted);font-weight:600;min-width:0}
+select,input[type=range]{width:100%;font:inherit}
+select{background:var(--surface2);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-height:44px}
+input[type=range]{accent-color:var(--indigo);min-height:44px}
+.full{grid-column:1/-1}
+.sw{flex-direction:row;align-items:center;gap:10px;color:var(--fg);min-height:44px}
+.sw input{width:22px;height:22px;accent-color:var(--indigo)}
+.sw small{color:var(--muted);font-weight:400}
+.btns{display:flex;gap:10px}
+button{font:inherit;font-weight:800;border-radius:16px;min-height:48px;padding:0 22px;cursor:pointer;border:1px solid var(--line);background:var(--surface2);color:var(--fg);transition:transform .15s}
+button:active{transform:scale(.95)}
+.btns button{flex:1}
+button:disabled{opacity:.45;cursor:default}
+button.go{flex:1;border:0;color:#fff;background:linear-gradient(90deg,var(--indigo),#1f9fe0 60%,var(--cyan))}
+:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+canvas{display:block;width:100%}
+#map{height:52px} #graph{height:170px}
+.hint{color:var(--muted);font-size:12.5px;margin:10px 0 0}
+#segs{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px 16px}
+.seg{display:grid;grid-template-columns:34px 1fr 56px;align-items:center;gap:8px;font-size:12.5px;color:var(--muted)}
+.seg .id{font-weight:800;font-variant-numeric:tabular-nums}
+.seg .bar{height:8px;border-radius:6px;background:var(--surface2);overflow:hidden}
+.seg .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--indigo),var(--cyan));border-radius:6px}
+.seg.on{color:var(--fg)} .seg:not(.on) .bar i{opacity:.45}
+.seg .st{text-align:right}
+#log{margin:0;padding:0;list-style:none;font-size:12.5px;display:flex;flex-direction:column;gap:6px;min-height:60px}
+#log li{color:var(--muted);font-variant-numeric:tabular-nums} #log li.warn{color:var(--warn)} #log li:first-child{color:var(--fg)}
+footer{color:var(--muted);font-size:12.5px;text-align:center;padding-top:4px}
+@media (max-width:420px){.hero{grid-template-columns:1fr;justify-items:center}.stats{width:100%}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<main class="wrap">
+  <header class="top">
+    <div><div class="mark">वेगम्</div><div class="sub">Vegam Engine simulator · हर डाउनलोड, वेग से।</div></div>
+    <span class="chip" id="chip">Ready</span>
+  </header>
+
+  <section class="card hero" aria-label="Download progress">
+    <div class="ring" id="ring">
+      <svg viewBox="0 0 120 120" aria-hidden="true">
+        <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6c5ce7"/><stop offset="1" stop-color="#00b8d4"/></linearGradient></defs>
+        <circle class="track" cx="60" cy="60" r="54" fill="none" stroke-width="9"/>
+        <circle class="arc" id="arc" cx="60" cy="60" r="54" fill="none" stroke="url(#g)" stroke-width="9" stroke-linecap="round" stroke-dasharray="339.29" stroke-dashoffset="339.29"/>
+      </svg>
+      <div class="ringtxt"><b id="pct">0%</b><span id="speed">0.0 MB/s</span></div>
+    </div>
+    <dl class="stats">
+      <div><dt>Connections</dt><dd id="conn">0 / 8</dd></div>
+      <div><dt>ETA</dt><dd id="eta">--</dd></div>
+      <div><dt>Downloaded</dt><dd id="dl">0 MB</dd></div>
+      <div><dt>Peak speed</dt><dd id="peak">0.0 MB/s</dd></div>
+    </dl>
+  </section>
+
+  <section class="card controls" aria-label="Controls">
+    <label>File size
+      <select id="size"><option value="50">50 MB</option><option value="250">250 MB</option><option value="1024" selected>1 GB</option></select></label>
+    <label>Sim speed
+      <select id="mult"><option value="1">x1 (real time)</option><option value="4" selected>x4</option><option value="10">x10</option></select></label>
+    <label class="full">Segments: <b id="segsOut">8</b>
+      <input id="segcount" type="range" min="1" max="16" value="8"></label>
+    <label>Speed limit
+      <select id="limit"><option value="0">No limit</option><option value="10">10 MB/s</option><option value="4">4 MB/s</option></select></label>
+    <label class="sw"><input id="thr" type="checkbox"><span>Server throttles<br><small>429 after 3 connections</small></span></label>
+    <label class="sw"><input id="chg" type="checkbox"><span>File changed on server<br><small>resume par ETag mismatch</small></span></label>
+    <div class="btns full"><button class="go" id="go">Start</button><button id="reset">Reset</button></div>
+    <div class="btns full"><button id="burst">503 burst (10s)</button><button id="kill">Kill app</button></div>
+  </section>
+
+  <section class="card">
+    <h2>File map</h2>
+    <canvas id="map" role="img" aria-label="Byte map of the file: filled parts are downloaded"></canvas>
+    <p class="hint">Har segment file ka ek byte-range hai. Bright head = jahan abhi data likha ja raha hai.</p>
+  </section>
+
+  <section class="card">
+    <h2>Speed, last 60 seconds</h2>
+    <canvas id="graph" role="img" aria-label="Line chart of download speed in MB per second over the last 60 seconds"></canvas>
+  </section>
+
+  <section class="card">
+    <h2>Segments <span id="fin" style="text-transform:none;letter-spacing:0;font-weight:600"></span></h2>
+    <div id="segs"></div>
+  </section>
+
+  <section class="card"><h2>Engine log</h2><ol id="log"><li>Start dabao, VegamEngine ka kaam dekho.</li></ol></section>
+
+  <footer>Powered by Vegam Engine · Ye simulation hai (network nahi), par split, work-stealing aur adaptive concurrency ka logic Kotlin engine jaisa hi hai.</footer>
+</main>
+
+<script>
+/*ENGINE-START*/
+const MB = 1048576;
+const rem = s => s.end - (s.start + s.done) + 1;
+
+// SegmentPlanner.kt ka JS twin
+const Planner = {
+  SMALL: 1 * MB, MIN_SEG: 256 * 1024, MIN_STEAL: 512 * 1024,
+  split(total, req) {
+    if (total < this.SMALL) return [{ idx: 0, start: 0, end: total - 1, done: 0 }];
+    const want = Math.min(16, Math.max(1, req));
+    const n = Math.max(1, Math.min(want, Math.floor(total / this.MIN_SEG)));
+    const base = Math.floor(total / n), extra = total % n;
+    let cur = 0; const out = [];
+    for (let i = 0; i < n; i++) {
+      const size = base + (i < extra ? 1 : 0);
+      out.push({ idx: i, start: cur, end: cur + size - 1, done: 0 });
+      cur += size;
+    }
+    return out;
+  },
+  steal(segs, newIdx) {
+    let v = null;
+    for (const s of segs) if (!v || rem(s) > rem(v)) v = s;
+    if (!v || rem(v) < this.MIN_STEAL) return null;
+    const at = v.start + v.done + Math.floor(rem(v) / 2);
+    const thief = { idx: newIdx, start: at, end: v.end, done: 0 };
+    v.end = at - 1;
+    return { victim: v, thief };
+  }
+};
+
+// SpeedMonitor.kt: 3 second rolling window
+class SpeedMonitor {
+  constructor(w = 3000) { this.w = w; this.s = []; }
+  record(b, t) { this.s.push([t, b]); this.trim(t); }
+  trim(t) { while (this.s.length && t - this.s[0][0] >= this.w) this.s.shift(); }
+  bps(t) {
+    this.trim(t);
+    if (!this.s.length) return 0;
+    const span = Math.min(this.w, Math.max(1000, t - this.s[0][0]));
+    let sum = 0; for (const x of this.s) sum += x[1];
+    return sum * 1000 / span;
+  }
+}
+
+// AdaptiveConcurrency.kt: throttle par aadha, healthy hone par double (demo ke liye 6s recovery)
+class Adaptive {
+  constructor(max, recover = 6000) { this.max = max; this.cur = max; this.recover = recover; this.last = -1e9; }
+  throttled(t) { this.cur = Math.max(1, Math.floor(this.cur / 2)); this.last = t; }
+  healthy(t) {
+    if (this.cur < this.max && t - this.last >= this.recover) { this.cur = Math.min(this.max, this.cur * 2); this.last = t; return true; }
+    return false;
+  }
+}
+
+const PER_CONN = 2.4 * MB, LINK = 40 * MB;
+
+class Sim {
+  constructor(total, segCount) {
+    this.total = total; this.segs = Planner.split(total, segCount);
+    this.segs.forEach(s => s.active = false);
+    this.nextIdx = this.segs.length; this.downloaded = 0; this.simMs = 0;
+    this.mon = new SpeedMonitor(); this.ad = new Adaptive(this.segs.length);
+    this.opts = { limit: 0, throttle: false }; this.lastSignal = -1e9;
+    this.hist = []; this.lastHist = 0; this.peak = 0; this.finished = false; this.log = [];
+    this.killed = false; this.outage = false; this.outageUntil = 0; this.retryAt = 0; this.attempt = 0;
+  }
+  // Phase 1B scenario: server 10s ke liye 503 deta hai. RetryPolicy: 1s, 2s, 4s, 8s backoff.
+  burst(ms) {
+    if (this.finished || this.killed || this.outage) return;
+    this.outage = true; this.outageUntil = this.simMs + ms; this.attempt = 0; this.retryAt = this.simMs + 1000;
+    this.ad.throttled(this.simMs); this.lastSignal = this.simMs;
+    this.say(`Server ne HTTP 503 diya: connections ${this.ad.cur}, retry 1s mein`, true);
+  }
+  // App kill: segments ka progress (Room mein save) bacha rehta hai, workers ruk jaate hain.
+  kill() {
+    if (this.finished || this.killed) return;
+    this.killed = true; this.outage = false; this.segs.forEach(s => s.active = false);
+    this.say(`App kill! ${Math.round(this.downloaded / MB)} MB progress safe hai`, true);
+  }
+  // ResumeValidator.kt: ETag same = wahin se aage; badla = zero se restart.
+  resume(changed) {
+    this.killed = false; this.mon = new SpeedMonitor();
+    if (changed) {
+      this.say('ETag badla: file alag hai, zero se restart', true);
+      this.segs = Planner.split(this.total, this.ad.max); this.segs.forEach(s => s.active = false);
+      this.nextIdx = this.segs.length; this.downloaded = 0; this.ad = new Adaptive(this.segs.length);
+    } else this.say(`Resume: ETag same, ${Math.round(this.downloaded / MB)} MB dobara download nahi honge`);
+  }
+  say(msg, warn) { this.log.unshift({ t: `[${(this.simMs / 1000).toFixed(1)}s] ${msg}`, warn: !!warn }); this.log.length = Math.min(this.log.length, 30); }
+  reconcile() {
+    const live = this.segs.filter(s => rem(s) > 0);
+    const act = live.filter(s => s.active);
+    while (act.length > this.ad.cur) act.pop().active = false;
+    while (act.length < this.ad.cur) {
+      const q = live.find(s => !s.active);
+      if (q) { q.active = true; act.push(q); continue; }
+      const r = Planner.steal(live, this.nextIdx);
+      if (!r) break;
+      this.nextIdx++; r.thief.active = true; this.segs.push(r.thief); live.push(r.thief); act.push(r.thief);
+      this.say(`Work-steal: #${r.thief.idx} ne #${r.victim.idx} ka aadha hissa utha liya`);
+    }
+  }
+  step(dt) {
+    if (this.finished || this.killed) return;
+    this.simMs += dt * 1000; const t = this.simMs;
+    this.reconcile();
+    const cap = this.opts.throttle ? 3 : Infinity;
+    if (this.ad.cur > cap) {
+      if (t - this.lastSignal > 1500) {
+        const prev = this.ad.cur; this.lastSignal = t; this.ad.throttled(t);
+        this.say(`Server ne 429 diya: connections ${prev} -> ${this.ad.cur}`, true);
+      }
+    } else if (!this.outage && this.ad.healthy(t)) this.say(`Network theek: connections ${this.ad.cur} tak wapas`);
+    if (this.outage && t >= this.retryAt) {
+      this.attempt++;
+      if (t < this.outageUntil) { const d = 1000 * 2 ** this.attempt; this.retryAt = t + d; this.say(`Retry ${this.attempt} fail, ${d / 1000}s backoff`, true); }
+      else { this.outage = false; this.say(`Retry ${this.attempt} OK, download wapas`); }
+    }
+    const served = this.outage ? [] : this.segs.filter(s => s.active && rem(s) > 0).slice(0, cap);
+    let rates = served.map(() => PER_CONN * (0.85 + 0.3 * Math.random()));
+    const ceiling = Math.min(LINK, this.opts.limit > 0 ? this.opts.limit : LINK);
+    const sum = rates.reduce((a, b) => a + b, 0);
+    if (sum > ceiling) rates = rates.map(r => r * ceiling / sum);
+    let got = 0;
+    served.forEach((s, i) => {
+      const b = Math.min(Math.floor(rates[i] * dt), rem(s));
+      s.done += b; got += b;
+      if (rem(s) === 0) { s.active = false; this.say(`Segment #${s.idx} complete`); }
+    });
+    this.downloaded += got; this.mon.record(got, t);
+    const bps = this.mon.bps(t); this.peak = Math.max(this.peak, bps);
+    if (t - this.lastHist >= 500) { this.lastHist = t; this.hist.push(bps); if (this.hist.length > 120) this.hist.shift(); }
+    if (this.downloaded >= this.total) { this.finished = true; this.segs.forEach(s => s.active = false); this.say('Download complete'); }
+  }
+}
+/*ENGINE-END*/
+
+const $ = id => document.getElementById(id);
+const cs = () => getComputedStyle(document.documentElement);
+let sim, state = 'idle';
+
+function build() {
+  sim = new Sim(+$('size').value * MB, +$('segcount').value);
+  readOpts();
+}
+function readOpts() { if (sim) { sim.opts.limit = +$('limit').value * MB; sim.opts.throttle = $('thr').checked; } }
+function fit(c) {
+  const r = window.devicePixelRatio || 1, w = c.clientWidth, h = c.clientHeight;
+  if (c.width !== Math.round(w * r) || c.height !== Math.round(h * r)) { c.width = Math.round(w * r); c.height = Math.round(h * r); }
+  const g = c.getContext('2d'); g.setTransform(r, 0, 0, r, 0, 0); return [g, w, h];
+}
+function rr(g, x, y, w, h, r) { g.beginPath(); g.roundRect ? g.roundRect(x, y, w, h, r) : g.rect(x, y, w, h); }
+
+function drawMap() {
+  const [g, w, h] = fit($('map')), st = cs();
+  const c1 = st.getPropertyValue('--indigo').trim(), c2 = st.getPropertyValue('--cyan').trim();
+  g.clearRect(0, 0, w, h);
+  g.save(); rr(g, 0, 0, w, h, 12); g.clip();
+  g.fillStyle = st.getPropertyValue('--surface2').trim(); g.fillRect(0, 0, w, h);
+  const grad = g.createLinearGradient(0, 0, w, 0); grad.addColorStop(0, c1); grad.addColorStop(1, c2);
+  const bg = st.getPropertyValue('--surface').trim();
+  for (const s of sim.segs) {
+    const x0 = s.start / sim.total * w, xd = (s.start + s.done) / sim.total * w;
+    g.fillStyle = grad; g.fillRect(x0, 0, Math.max(0, xd - x0), h);
+    if (s.active && rem(s) > 0) { g.fillStyle = '#fff'; g.globalAlpha = .9; g.fillRect(xd - 1, 0, 2, h); g.globalAlpha = 1; }
+  }
+  g.fillStyle = bg;
+  for (const s of sim.segs) if (s.start > 0) g.fillRect(s.start / sim.total * w - .5, 0, 1, h);
+  g.restore();
+}
+
+function drawGraph() {
+  const [g, w, h] = fit($('graph')), st = cs();
+  const muted = st.getPropertyValue('--muted').trim(), line = st.getPropertyValue('--line').trim();
+  const c1 = st.getPropertyValue('--indigo').trim(), c2 = st.getPropertyValue('--cyan').trim();
+  g.clearRect(0, 0, w, h);
+  const L = 34, R = 8, T = 10, B = 20, pw = w - L - R, ph = h - T - B;
+  const mx = Math.max(5 * MB, ...sim.hist), ymax = Math.ceil(mx / (5 * MB)) * 5 * MB;
+  g.font = '11px Manrope, system-ui, sans-serif'; g.textBaseline = 'middle'; g.fillStyle = muted; g.strokeStyle = line; g.lineWidth = 1;
+  for (let i = 0; i <= 2; i++) {
+    const y = T + ph - ph * i / 2;
+    g.beginPath(); g.moveTo(L, y); g.lineTo(w - R, y); g.stroke();
+    g.textAlign = 'right'; g.fillText(String(Math.round(ymax * i / 2 / MB)), L - 6, y);
+  }
+  g.textBaseline = 'alphabetic'; g.textAlign = 'left'; g.fillText('60s ago', L, h - 4);
+  g.textAlign = 'right'; g.fillText('now · MB/s', w - R, h - 4);
+  const n = sim.hist.length; if (n < 2) return;
+  const X = i => L + pw - (n - 1 - i) / 119 * pw, Y = v => T + ph - v / ymax * ph;
+  const grad = g.createLinearGradient(L, 0, w - R, 0); grad.addColorStop(0, c1); grad.addColorStop(1, c2);
+  g.beginPath(); sim.hist.forEach((v, i) => i ? g.lineTo(X(i), Y(v)) : g.moveTo(X(i), Y(v)));
+  g.lineTo(X(n - 1), T + ph); g.lineTo(X(0), T + ph); g.closePath();
+  g.globalAlpha = .16; g.fillStyle = grad; g.fill(); g.globalAlpha = 1;
+  g.beginPath(); sim.hist.forEach((v, i) => i ? g.lineTo(X(i), Y(v)) : g.moveTo(X(i), Y(v)));
+  g.strokeStyle = grad; g.lineWidth = 2.5; g.lineJoin = 'round'; g.stroke();
+  g.fillStyle = c2; g.beginPath(); g.arc(X(n - 1), Y(sim.hist[n - 1]), 4, 0, 7); g.fill();
+}
+
+const fmtMB = b => (b / MB).toFixed(1);
+function fmtEta(s) { if (s == null || !isFinite(s)) return '--'; s = Math.round(s); return s >= 60 ? `${Math.floor(s / 60)}m ${s % 60}s` : `${s}s`; }
+
+function render() {
+  const t = sim.simMs, bps = sim.mon.bps(t), p = sim.downloaded / sim.total;
+  const act = sim.segs.filter(s => s.active && rem(s) > 0).length;
+  $('pct').textContent = Math.floor(p * 100) + '%';
+  $('arc').style.strokeDashoffset = 339.29 * (1 - p);
+  $('ring').classList.toggle('on', state === 'running');
+  $('speed').textContent = fmtMB(bps) + ' MB/s';
+  $('conn').textContent = `${act} / ${sim.ad.max}`;
+  $('eta').textContent = state === 'done' ? 'Done' : fmtEta(bps > 0 ? (sim.total - sim.downloaded) / bps : null);
+  $('dl').textContent = sim.total >= 1024 * MB ? `${(sim.downloaded / 1024 / MB).toFixed(2)} GB` : `${Math.round(sim.downloaded / MB)} MB`;
+  $('peak').textContent = fmtMB(sim.peak) + ' MB/s';
+  const live = sim.segs.filter(s => rem(s) > 0);
+  $('fin').textContent = `· ${sim.segs.length - live.length} finished, ${live.length} left`;
+  $('segs').innerHTML = live.map(s => {
+    const pr = Math.floor(s.done / (s.end - s.start + 1) * 100);
+    return `<div class="seg${s.active ? ' on' : ''}"><span class="id">#${s.idx}</span><div class="bar"><i style="width:${Math.min(100, pr)}%"></i></div><span class="st">${s.active ? 'active' : 'queued'}</span></div>`;
+  }).join('') || '<div class="hint">Saare segments complete.</div>';
+  $('log').innerHTML = sim.log.slice(0, 8).map(e => `<li${e.warn ? ' class="warn"' : ''}>${e.t}</li>`).join('') || '<li>Start dabao, VegamEngine ka kaam dekho.</li>';
+  const chip = $('chip'); chip.textContent = { idle: 'Ready', running: sim.outage ? 'Retrying' : 'Running', paused: 'Paused', killed: 'Killed', done: 'Done' }[state];
+  chip.className = 'chip' + (state === 'running' ? ' run' : state === 'done' ? ' done' : '');
+  $('go').textContent = { idle: 'Start', running: 'Pause', paused: 'Resume', killed: 'Resume', done: 'Run again' }[state];
+  $('burst').disabled = state !== 'running' || sim.outage;
+  $('kill').disabled = state !== 'running' && state !== 'paused';
+  $('size').disabled = $('segcount').disabled = state !== 'idle';
+  drawMap(); drawGraph();
+}
+
+function tick() {
+  if (state === 'running') {
+    const n = +$('mult').value;
+    for (let i = 0; i < n; i++) sim.step(0.1);
+    if (sim.finished) state = 'done';
+  }
+  render();
+}
+
+$('go').onclick = () => {
+  if (state === 'done') { build(); state = 'running'; }
+  else if (state === 'killed') { sim.resume($('chg').checked); state = 'running'; }
+  else state = state === 'running' ? 'paused' : 'running';
+  render();
+};
+$('burst').onclick = () => { sim.burst(10000); render(); };
+$('kill').onclick = () => { sim.kill(); state = 'killed'; render(); };
+$('reset').onclick = () => { state = 'idle'; build(); render(); };
+$('segcount').oninput = e => { $('segsOut').textContent = e.target.value; build(); render(); };
+$('size').onchange = () => { build(); render(); };
+$('limit').onchange = readOpts; $('thr').onchange = readOpts;
+window.addEventListener('resize', render);
+
+build(); render(); setInterval(tick, 100);
+</script>

@@ -1,0 +1,52 @@
+name: Vegam build
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # Gradle wrapper commit nahi kiya, isliye setup-gradle seedha Gradle install karta hai.
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.10.2
+
+      # Pehle APK: test fail ho tab bhi APK mil jaaye (compile error ho to yahin dikhega).
+      - name: Debug APK
+        run: gradle :app:assembleDebug --stacktrace
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vegam-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+
+      - name: Unit tests
+        if: always()
+        run: >
+          gradle :core:engine:test :core:database:testDebugUnitTest :core:download:testDebugUnitTest
+          :feature:home:testDebugUnitTest :feature:add:testDebugUnitTest :feature:detail:testDebugUnitTest :feature:stats:testDebugUnitTest :feature:settings:testDebugUnitTest :feature:smart:testDebugUnitTest :feature:onboarding:testDebugUnitTest :core:ui:testDebugUnitTest --continue --stacktrace
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-reports
+          path: |
+            core/engine/build/reports/tests/test
+            core/database/build/reports/tests/testDebugUnitTest
+            core/download/build/reports/tests/testDebugUnitTest
+            feature/home/build/reports/tests/testDebugUnitTest
+            feature/add/build/reports/tests/testDebugUnitTest
+            feature/detail/build/reports/tests/testDebugUnitTest
+            feature/stats/build/reports/tests/testDebugUnitTest
+            feature/settings/build/reports/tests/testDebugUnitTest
+            feature/onboarding/build/reports/tests/testDebugUnitTest
+            core/ui/build/reports/tests/testDebugUnitTest

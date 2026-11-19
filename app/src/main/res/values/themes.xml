@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App ka asli theme: Compose khud saare rang deta hai, ye bas khaali window hai. -->
+    <style name="Theme.Vegam" parent="android:Theme.Material.NoActionBar" />
+
+    <!-- Cold start par splash: gradient icon indigo par; settings load hote hi Theme.Vegam mein badal jata hai. -->
+    <style name="Theme.Vegam.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#6C5CE7</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.Vegam</item>
+    </style>
+</resources>

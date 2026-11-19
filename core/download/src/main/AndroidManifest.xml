@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- Android 14+: foreground service ka type declare karna zaroori hai. Download = dataSync. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <!-- Android 13+: notification dikhane ke liye runtime permission (Phase 3 onboarding mein maangenge). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application>
+        <!-- WorkManager ki apni foreground service par type jodna. -->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
+
+        <!-- Notification ke "Pause" button ka receiver. Sirf apni app bhej sakti hai. -->
+        <receiver
+            android:name=".PauseReceiver"
+            android:exported="false" />
+    </application>
+</manifest>
