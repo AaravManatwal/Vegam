@@ -175,7 +175,7 @@ class SegmentedDownloader(
                 if (now - lastSignal > 1500) {
                     lastSignal = now
                     val prev = adaptive.current
-                    adaptive.throttled(now)
+                    adaptive.onThrottled(now)
                     msg = "Server throttle: connections $prev -> ${adaptive.current}"
                 }
             }

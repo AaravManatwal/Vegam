@@ -58,7 +58,7 @@ fun Modifier.vegamShared(key: String): Modifier {
     val av = LocalAnimatedScope.current ?: return this
     return with(st) {
         this@vegamShared.sharedElement(
-            sharedContentState = rememberSharedContentState(key),
+            state = rememberSharedContentState(key),
             animatedVisibilityScope = av,
             boundsTransform = { _, _ -> vegamSpring<Rect>() },
         )
