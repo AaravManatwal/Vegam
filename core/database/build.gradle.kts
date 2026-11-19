@@ -25,8 +25,8 @@ kotlin {
 
 dependencies {
     api(project(":core:engine"))     // Segment, ResumeState, Validators mappers ke liye
-    implementation(libs.room.runtime)
-    implementation(libs.room.ktx)
+    api(libs.room.runtime)
+    api(libs.room.ktx)
     ksp(libs.room.compiler)
 
     testImplementation(libs.junit4)

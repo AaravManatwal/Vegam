@@ -21,7 +21,10 @@ object UrlNames {
     private val BAD = Regex("[\\\\/:*?\"<>|]")
 
     fun fileName(url: String): String {
-        val path = url.substringBefore('#').substringBefore('?').trimEnd('/')
+        val noQuery = url.substringBefore('#').substringBefore('?')
+        // "https://a.com/" mein path khaali hai: host ko file ka naam nahi banana.
+        val afterHost = noQuery.substringAfter("://", noQuery).substringAfter('/', "")
+        val path = afterHost.trimEnd('/')
         val last = path.substringAfterLast('/')
         val decoded = try {
             URLDecoder.decode(last.replace("+", "%2B"), "UTF-8")   // '+' ko space na banne do
