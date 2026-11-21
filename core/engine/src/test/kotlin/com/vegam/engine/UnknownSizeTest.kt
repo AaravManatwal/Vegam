@@ -21,7 +21,7 @@ class UnknownSizeTest {
     @Test fun `chunked response without length downloads fully`() = runBlocking {
         val data = ByteArray(300_000) { (it % 251).toByte() }
         val s = MockWebServer().apply { dispatcher = object : okhttp3.mockwebserver.Dispatcher() {
-            override fun dispatch(request: okhttp3.mockwebserver.RecordedRequest) = chunked(data)
+            override fun dispatch(request: okhttp3.mockwebserver.RecordedRequest) = if (request.method == "HEAD") MockResponse() else chunked(data)
         }; start() }
         val f = tmp()
         var finalTotal = -1L
@@ -36,7 +36,7 @@ class UnknownSizeTest {
 
     @Test fun `probe reports unknown size`() = runBlocking {
         val s = MockWebServer().apply { dispatcher = object : okhttp3.mockwebserver.Dispatcher() {
-            override fun dispatch(request: okhttp3.mockwebserver.RecordedRequest) = chunked(ByteArray(10))
+            override fun dispatch(request: okhttp3.mockwebserver.RecordedRequest) = if (request.method == "HEAD") MockResponse() else chunked(ByteArray(10))
         }; start() }
         val info = SegmentedDownloader().probe(s.url("/f").toString())
         assertFalse(info.sizeKnown)
@@ -46,7 +46,7 @@ class UnknownSizeTest {
 
     @Test fun `html page is refused instead of saved as a file`() = runBlocking {
         val s = MockWebServer().apply { dispatcher = object : okhttp3.mockwebserver.Dispatcher() {
-            override fun dispatch(request: okhttp3.mockwebserver.RecordedRequest) = chunked("<html>hi</html>".toByteArray(), "text/html; charset=utf-8")
+            override fun dispatch(request: okhttp3.mockwebserver.RecordedRequest) = if (request.method == "HEAD") MockResponse() else chunked("<html>hi</html>".toByteArray(), "text/html; charset=utf-8")
         }; start() }
         val ex = assertFailsWith<DownloadException> { SegmentedDownloader().download(s.url("/f").toString(), tmp()) }
         assertTrue(ex.message!!.contains("web page"))
