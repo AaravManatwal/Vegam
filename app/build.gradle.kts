@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -7,7 +9,7 @@ plugins {
 }
 
 // version.properties se: VERSION_NAME + BUILD (versionCode = BUILD).
-val versionProps = java.util.Properties().apply { file("${rootDir}/version.properties").inputStream().use { load(it) } }
+val versionProps = Properties().apply { file("${rootDir}/version.properties").inputStream().use { load(it) } }
 val appVersionName: String = versionProps.getProperty("VERSION_NAME")
 val appBuild: Int = versionProps.getProperty("BUILD").trim().toInt()
 base.archivesName.set("vegam-$appVersionName-build$appBuild")

@@ -136,7 +136,8 @@ fun SettingsScreen(
 /** "Vegam · वेगम् · v1.0.0 (build 1)": asli installed version (version.properties se aata hai). */
 private fun versionLabel(ctx: android.content.Context): String = runCatching {
     val pi = ctx.packageManager.getPackageInfo(ctx.packageName, 0)
-    "Vegam · वेगम् · v${pi.versionName} (build ${@Suppress("DEPRECATION") pi.versionCode})"
+    @Suppress("DEPRECATION") val code = pi.versionCode
+    "Vegam · वेगम् · v${pi.versionName} (build $code)"
 }.getOrDefault("Vegam · वेगम्")
 
 @Composable
