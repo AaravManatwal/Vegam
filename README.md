@@ -3,7 +3,7 @@ Download at the speed of thought · हर डाउनलोड, वेग स�
 
 Premium high-speed Android download manager. Custom **VegamEngine** (segmented multi-connection downloader).
 
-## Status: Phase 5 (Testing + Release + Play Store prep) - v1.0.0-rc1
+## Status: Phase 5 (Testing + Release + Play Store prep) - v1.0.0 (build number `version.properties` mein; har delivery par +1)
 - `:core:ui`: VegamTheme (M3, brand colors, shapes), GradientRing, NumberTicker, FileTypeTile, vegamBackground
 - `:feature:home`: HomeViewModel (Hilt) + Home screen (stats, search, active/completed, swipe-to-delete, basic Add sheet)
 - `:app`: Hilt, navigation, bottom bar + FAB (Stats/Settings/Detail are placeholders until 3B/3C)

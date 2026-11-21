@@ -67,4 +67,15 @@ fun isLikelyFileUrl(url: String): Boolean {
 }
 
 /** Probe ka public roop (Prober internal hai). Add screen ko naam/size/Range-support dikhane ke liye. */
-data class FileInfo(val totalBytes: Long, val acceptRanges: Boolean, val etag: String?, val lastModified: String?)
+data class FileInfo(
+    /** Server ne size nahi bataya to -1 (ya 0): download chalega, par 1 connection se aur % ke bina. */
+    val totalBytes: Long,
+    val acceptRanges: Boolean,
+    val etag: String?,
+    val lastModified: String?,
+    val contentType: String? = null,
+) {
+    val sizeKnown: Boolean get() = totalBytes > 0
+    /** File ki jagah web page (text/html) mil raha hai? Aksar ye "download page" hota hai, asli file ka link nahi. */
+    val looksLikeWebPage: Boolean get() = contentType?.substringBefore(';')?.trim()?.lowercase() in setOf("text/html", "application/xhtml+xml")
+}

@@ -6,6 +6,12 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+// version.properties se: VERSION_NAME + BUILD (versionCode = BUILD).
+val versionProps = java.util.Properties().apply { file("${rootDir}/version.properties").inputStream().use { load(it) } }
+val appVersionName: String = versionProps.getProperty("VERSION_NAME")
+val appBuild: Int = versionProps.getProperty("BUILD").trim().toInt()
+base.archivesName.set("vegam-$appVersionName-build$appBuild")
+
 android {
     namespace = "com.vegam.app"
     compileSdk = 35
@@ -14,9 +20,8 @@ android {
         applicationId = "com.vegam.app"
         minSdk = 26
         targetSdk = 35
-        // CI release mein run number se badhta hai (Play Store har upload par bada versionCode maangta hai).
-        versionCode = (System.getenv("VEGAM_VERSION_CODE") ?: "1").toInt()
-        versionName = "1.0.0-rc1"
+        versionCode = appBuild
+        versionName = appVersionName
     }
 
     // Keystore sirf tab jab CI secrets de (VEGAM_KEYSTORE_PATH...). Nahi to release unsigned banta hai, build tootta nahi.

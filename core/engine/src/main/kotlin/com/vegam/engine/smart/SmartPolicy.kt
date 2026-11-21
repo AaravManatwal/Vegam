@@ -37,10 +37,7 @@ object SmartPolicy {
         }
         val reached = r.state == LinkState.VALID
         if (reached && r.sizeBytes == null) {
-            return Compatibility(
-                Compat.NOT_POSSIBLE,
-                listOf("Server file ka size (Content-Length) nahi de raha. VegamEngine ko size chahiye, isliye abhi ye download supported nahi."),
-            )
+            notes += "Server file ka size nahi batata: Vegam 1 connection se download karega. % / ETA nahi dikhega aur ruk jaane par zero se shuru hoga."
         }
         if (r.acceptRanges == false) {
             notes += "Server Range support nahi deta: ek hi connection se download hoga, aur ruk jaane par zero se shuru hoga."

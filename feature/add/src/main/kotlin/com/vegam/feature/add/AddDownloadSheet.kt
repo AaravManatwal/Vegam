@@ -216,9 +216,16 @@ private fun MetaCard(state: AddUiState, onName: (String) -> Unit) {
             }
             if (meta is MetaState.Ready) {
                 Text(
-                    Formatters.bytes(meta.info.totalBytes) + " · " + if (meta.info.acceptRanges) "Multi-connection chalega" else "Sirf 1 connection",
+                    (if (meta.info.sizeKnown) Formatters.bytes(meta.info.totalBytes) else "Size pata nahi") + " · " +
+                        if (meta.info.acceptRanges) "Multi-connection chalega" else "Sirf 1 connection",
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                if (meta.info.looksLikeWebPage) {
+                    Text(
+                        "Dhyan: ye link web page (HTML) de raha hai, asli file nahi. Download fail ho sakta hai: asli download link browser se copy karo.",
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error,
+                    )
+                }
             } else if (meta is MetaState.Error) {
                 Text("Info nahi mili (${meta.message}). Phir bhi try kar sakte ho.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
             }

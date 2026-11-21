@@ -5,7 +5,11 @@ import okhttp3.Request
 import okhttp3.Response
 import java.io.IOException
 
-internal data class Probe(val totalBytes: Long, val acceptRanges: Boolean, val validators: Validators)
+internal data class Probe(
+    val totalBytes: Long, val acceptRanges: Boolean, val validators: Validators, val contentType: String? = null,
+) {
+    val sizeKnown: Boolean get() = totalBytes > 0
+}
 
 /** Download shuru karne se pehle: size, Range support, ETag/Last-Modified pata karo. Blocking call. */
 internal object Prober {
@@ -17,7 +21,7 @@ internal object Prober {
                 val len = r.header("Content-Length")?.toLongOrNull()
                 if (r.isSuccessful && len != null && len > 0) {
                     val ranges = r.header("Accept-Ranges")?.contains("bytes", ignoreCase = true) == true
-                    return Probe(len, ranges, validatorsOf(r, len))
+                    return Probe(len, ranges, validatorsOf(r, len), r.header("Content-Type"))
                 }
             }
         } catch (_: IOException) {
@@ -31,11 +35,12 @@ internal object Prober {
             if (r.code == 206) {
                 val total = r.header("Content-Range")?.substringAfter('/')?.toLongOrNull()
                     ?: throw DownloadException("Content-Range se size nahi mila")
-                return Probe(total, true, validatorsOf(r, total))
+                return Probe(total, true, validatorsOf(r, total), r.header("Content-Type"))
             }
             val len = r.header("Content-Length")?.toLongOrNull()
-                ?: throw DownloadException("File ka size pata nahi (Content-Length missing). Phase 1B mein unsupported.")
-            return Probe(len, false, validatorsOf(r, len))
+            // Content-Length nahi (chunked): size unknown. Engine ab 1 connection se stream karta hai.
+            if (len == null || len <= 0) return Probe(-1, false, validatorsOf(r, -1), r.header("Content-Type"))
+            return Probe(len, false, validatorsOf(r, len), r.header("Content-Type"))
         }
     }
 

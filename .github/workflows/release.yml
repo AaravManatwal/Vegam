@@ -44,7 +44,6 @@ jobs:
         env:
           VEGAM_KEYSTORE_PASSWORD: ${{ secrets.VEGAM_KEYSTORE_PASSWORD }}
           VEGAM_KEY_ALIAS: ${{ secrets.VEGAM_KEY_ALIAS }}
-          VEGAM_VERSION_CODE: ${{ github.run_number }}
         run: gradle :app:bundleRelease :app:assembleRelease --stacktrace
 
       - uses: actions/upload-artifact@v4

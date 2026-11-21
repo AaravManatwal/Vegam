@@ -124,6 +124,7 @@ private fun GradientBar(progress: Float) {
 private fun subtitle(i: DownloadItem): String = when {
     i.status == DownloadStatus.FAILED -> i.error ?: "Download fail ho gayi"
     i.totalBytes > 0 -> "${Formatters.bytes(i.downloadedBytes)} / ${Formatters.bytes(i.totalBytes)}"
+    i.downloadedBytes > 0 -> "${Formatters.bytes(i.downloadedBytes)} (size pata nahi)"
     else -> "Size pata kar rahe hain..."
 }
 

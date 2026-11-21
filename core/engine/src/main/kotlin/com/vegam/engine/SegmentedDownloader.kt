@@ -26,7 +26,7 @@ class SegmentedDownloader(
     /** Add screen ke liye: size, Range support aur validators bina download shuru kiye. */
     suspend fun probe(url: String): FileInfo = withContext(Dispatchers.IO) {
         val p = Prober.probe(client, url)
-        FileInfo(p.totalBytes, p.acceptRanges, p.validators.etag, p.validators.lastModified)
+        FileInfo(p.totalBytes, p.acceptRanges, p.validators.etag, p.validators.lastModified, p.contentType)
     }
 
     suspend fun download(
@@ -37,6 +37,7 @@ class SegmentedDownloader(
         listener: DownloadListener = DownloadListener.NONE,
     ): DownloadOutcome = withContext(Dispatchers.IO) {
         val probe = Prober.probe(client, url)
+        if (!probe.sizeKnown) return@withContext streamUnknownSize(url, target, probe, listener)
         val multi = probe.acceptRanges && probe.totalBytes >= SegmentPlanner.SMALL_FILE_BYTES
         // Resume tabhi jab server wahi file de raha ho (ETag/Last-Modified/length match).
         val saved = resume?.takeIf { multi && ResumeValidator.canResume(it.validators, probe.validators) }
@@ -49,6 +50,67 @@ class SegmentedDownloader(
             if (raf.length() != probe.totalBytes) raf.setLength(probe.totalBytes)  // pehle se space reserve
             Run(url, probe, multi, workers, segments, raf.channel, listener).run()
         }
+    }
+
+    /**
+     * Server size nahi batata (chunked / Content-Length nahi): ek hi connection se seedha stream.
+     * Limits (imaandaar): % aur ETA nahi, resume nahi (ruk gaya to zero se), multi-connection nahi.
+     * Web page (text/html) ko file samajh ke save nahi karte: wo aksar "download page" hota hai.
+     */
+    private suspend fun streamUnknownSize(url: String, target: File, probe: Probe, listener: DownloadListener): DownloadOutcome {
+        val name = target.name.lowercase()
+        val isPage = probe.contentType?.substringBefore(';')?.trim()?.lowercase() in setOf("text/html", "application/xhtml+xml")
+        if (isPage && !(name.endsWith(".html") || name.endsWith(".htm") || name.endsWith(".xhtml"))) {
+            throw DownloadException(
+                "Ye link asli file nahi, ek web page (text/html) hai. Browser mein page kholkar asli download button/link se link copy karo."
+            )
+        }
+        listener.onStart(probe.validators, 0)
+        listener.onEvent("Server ne size nahi bataya: 1 connection se download, % nahi dikhega, resume nahi hoga")
+        val req = Request.Builder().url(url).header("Accept-Encoding", "identity").build()
+        val call = client.newCall(req)
+        val cancelHook = currentCoroutineContext().job.invokeOnCompletion { call.cancel() }
+        val monitor = SpeedMonitor()
+        var downloaded = 0L
+        var lastTick = 0L
+        try {
+            call.execute().use { resp ->
+                if (!resp.isSuccessful) {
+                    if (RetryPolicy.isRetryableStatus(resp.code)) throw HttpStatusException(resp.code)
+                    throw DownloadException("Server ne HTTP ${resp.code} diya")
+                }
+                val body = resp.body ?: throw IOException("Empty response body")
+                RandomAccessFile(target, "rw").use { raf ->
+                    raf.setLength(0)
+                    val src = body.byteStream()
+                    val buf = ByteArray(64 * 1024)
+                    while (true) {
+                        currentCoroutineContext().ensureActive()
+                        val n = src.read(buf)
+                        if (n < 0) break
+                        raf.write(buf, 0, n)
+                        downloaded += n
+                        val now = System.currentTimeMillis()
+                        monitor.record(n.toLong(), now)
+                        val wait = rateLimiter.acquire(n.toLong(), System.nanoTime())
+                        if (wait > 0) delay(wait)
+                        if (now - lastTick >= 500) {
+                            lastTick = now
+                            listener.onProgress(downloaded, 0, monitor.bytesPerSec(now))
+                            listener.onSegments(listOf(Segment(0, 0, maxOf(downloaded - 1, 0), downloaded)))
+                        }
+                    }
+                }
+            }
+        } finally {
+            cancelHook.dispose()
+            listener.onSegments(listOf(Segment(0, 0, maxOf(downloaded - 1, 0), downloaded)))
+        }
+        if (downloaded == 0L) throw DownloadException("Server ne khaali file di (0 bytes)")
+        val finalValidators = probe.validators.copy(contentLength = downloaded)
+        listener.onStart(finalValidators, downloaded)     // asli size DB mein, taaki list mein "Done + size" dikhe
+        listener.onProgress(downloaded, downloaded, 0)
+        return DownloadOutcome(finalValidators, downloaded, 1)
     }
 
     /** Ek segment ki live state. `seg` har badlaav par naya immutable Segment hota hai. */

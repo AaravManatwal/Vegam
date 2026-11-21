@@ -126,12 +126,18 @@ fun SettingsScreen(
         item {
             Section("About") {
                 OutlinedButton(onClick = viewModel::replayOnboarding) { Text("Onboarding dobara dekho") }
-                Text("Vegam · वेगम् · v0.4", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                Text(versionLabel(LocalContext.current), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                 Text("Powered by VegamEngine", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             }
         }
     }
 }
+
+/** "Vegam · वेगम् · v1.0.0 (build 1)": asli installed version (version.properties se aata hai). */
+private fun versionLabel(ctx: android.content.Context): String = runCatching {
+    val pi = ctx.packageManager.getPackageInfo(ctx.packageName, 0)
+    "Vegam · वेगम् · v${pi.versionName} (build ${@Suppress("DEPRECATION") pi.versionCode})"
+}.getOrDefault("Vegam · वेगम्")
 
 @Composable
 private fun Section(title: String, content: @Composable () -> Unit) {

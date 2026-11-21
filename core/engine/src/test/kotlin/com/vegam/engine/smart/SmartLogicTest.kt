@@ -261,9 +261,10 @@ class SmartPolicyTest {
         assertTrue(d.canDownload)
     }
 
-    @Test fun `server that reached us but gives no size is not possible for this engine`() {
+    @Test fun `server that gives no size is limited but downloadable (single stream)`() {
         val c = SmartPolicy.compatibility(rep("https://a.com/a.zip", size = null))
-        assertEquals(Compat.NOT_POSSIBLE, c.level)
+        assertEquals(Compat.LIMITED, c.level)
+        assertTrue(c.notes.any { it.contains("1 connection") })
     }
 
     @Test fun `no range support is limited not blocked`() {
