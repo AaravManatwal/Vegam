@@ -40,12 +40,15 @@ class DownloadRepository(
     fun observeSpeedHistory(id: Long): Flow<List<Long>> = live.history.map { it[id] ?: emptyList() }
 
     /** Add screen: server se naam/size/Range support. Network error par Result.failure. */
-    suspend fun probe(url: String): Result<FileInfo> = runCatching { downloader.probe(url) }
+    suspend fun probe(url: String, headers: Map<String, String> = emptyMap()): Result<FileInfo> = runCatching { downloader.probe(url, headers) }
 
     suspend fun add(
         url: String, fileName: String, priority: Int = 1, wifiOnly: Boolean = false,
-        maxSegments: Int? = null, scheduledAt: Long? = null,
-    ): Long = scheduler.enqueue(url, fileName, priority, wifiOnly, maxSegments, scheduledAt, saveLocation.treeUri)
+        maxSegments: Int? = null, scheduledAt: Long? = null, headers: Map<String, String> = emptyMap(),
+    ): Long = scheduler.enqueue(
+        url, fileName, priority, wifiOnly, maxSegments, scheduledAt, saveLocation.treeUri,
+        com.vegam.engine.RequestHeaders.encode(headers),
+    )
 
     suspend fun pause(id: Long) = scheduler.pause(id)
     suspend fun resume(id: Long) = scheduler.resume(id)

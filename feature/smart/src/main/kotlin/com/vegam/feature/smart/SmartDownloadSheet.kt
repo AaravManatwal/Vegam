@@ -59,6 +59,7 @@ private fun toneColor(t: Tone): Color = when (t) {
 @Composable
 fun SmartDownloadSheet(
     onOpenManual: (String) -> Unit,
+    onOpenCapture: (String) -> Unit = {},
     onAdded: () -> Unit = {},
     vm: SmartViewModel = hiltViewModel(),
 ) {
@@ -78,7 +79,7 @@ fun SmartDownloadSheet(
                     Text(stepText(s.step))
                     OutlinedButton(onClick = vm::cancel, modifier = Modifier.fillMaxWidth()) { Text("Cancel") }
                 }
-                is SmartSession.Ready -> ReadyContent(s, confirming, vm, onOpenManual, onAdded)
+                is SmartSession.Ready -> ReadyContent(s, confirming, vm, onOpenManual, onOpenCapture, onAdded)
             }
         }
     }
@@ -87,7 +88,7 @@ fun SmartDownloadSheet(
 @Composable
 private fun ReadyContent(
     s: SmartSession.Ready, confirming: Boolean, vm: SmartViewModel,
-    onOpenManual: (String) -> Unit, onAdded: () -> Unit,
+    onOpenManual: (String) -> Unit, onOpenCapture: (String) -> Unit, onAdded: () -> Unit,
 ) {
     val r = s.result
     val rep = r.report
@@ -144,6 +145,10 @@ private fun ReadyContent(
     // RED par koi bypass nahi. Baaki "possible nahi" par purana Add screen (manual) dikhate hain, jo wahi engine use karta hai.
     if (blocked && r.security?.level != RiskLevel.RED && r.compatibility.level == Compat.NOT_POSSIBLE) {
         TextButton(onClick = { vm.cancel(); onOpenManual(s.url) }) { Text("Add screen mein kholo (manual)") }
+    }
+    if (rep.looksLikeWebPage) {
+        Text("Ye link ek web page hai, seedhi file nahi. Page ke andar ka download button Vegam ke browser mein dabao: file apne aap pakdi jayegi.", style = MaterialTheme.typography.bodySmall)
+        Button(onClick = { vm.cancel(); onOpenCapture(s.url) }, modifier = Modifier.fillMaxWidth()) { Text("Page kholo, asli download pakdo") }
     }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
         OutlinedButton(onClick = vm::cancel, modifier = Modifier.weight(1f)) { Text(if (blocked) "Band karo" else "CANCEL") }

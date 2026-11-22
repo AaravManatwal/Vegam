@@ -90,7 +90,10 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
         }
 
         try {
-            graph.downloader.download(entity.url, File(entity.targetPath), entity.maxSegments, resume, listener)
+            graph.downloader.download(
+                entity.url, File(entity.targetPath), entity.maxSegments, resume, listener,
+                com.vegam.engine.RequestHeaders.decode(entity.headers),
+            )
             withContext(NonCancellable) {
                 snapshots.close(); writer.join()
                 // Chuna hua folder (SAF) ho to ab copy karo; fail ho to file private folder mein safe rehti hai.

@@ -38,7 +38,7 @@ class DownloadScheduler(
 
     suspend fun enqueue(
         url: String, fileName: String, priority: Int = 1, wifiOnly: Boolean = false,
-        maxSegments: Int? = null, scheduledAt: Long? = null, destUri: String? = null,
+        maxSegments: Int? = null, scheduledAt: Long? = null, destUri: String? = null, headers: String? = null,
     ): Long {
         val dao = db.downloads()
         val dir = VegamGraph.downloadDir(context)
@@ -49,7 +49,7 @@ class DownloadScheduler(
             DownloadEntity(
                 url = url, fileName = name, targetPath = File(dir, name).path, priority = priority,
                 sortOrder = dao.nextSortOrder(), maxSegments = (maxSegments ?: settings.defaultSegments).coerceIn(1, 16),
-                wifiOnly = wifiOnly, createdAt = clock(), scheduledAt = scheduledAt, destUri = destUri,
+                wifiOnly = wifiOnly, createdAt = clock(), scheduledAt = scheduledAt, destUri = destUri, headers = headers,
             )
         )
         pump()

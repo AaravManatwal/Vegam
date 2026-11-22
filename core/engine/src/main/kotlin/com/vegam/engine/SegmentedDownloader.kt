@@ -24,8 +24,8 @@ class SegmentedDownloader(
     private val rateLimiter: TokenBucket = TokenBucket(0),
 ) {
     /** Add screen ke liye: size, Range support aur validators bina download shuru kiye. */
-    suspend fun probe(url: String): FileInfo = withContext(Dispatchers.IO) {
-        val p = Prober.probe(client, url)
+    suspend fun probe(url: String, headers: Map<String, String> = emptyMap()): FileInfo = withContext(Dispatchers.IO) {
+        val p = Prober.probe(RequestHeaders.apply(client, url, headers), url)
         FileInfo(p.totalBytes, p.acceptRanges, p.validators.etag, p.validators.lastModified, p.contentType)
     }
 
@@ -35,9 +35,11 @@ class SegmentedDownloader(
         maxSegments: Int = 8,
         resume: ResumeState? = null,
         listener: DownloadListener = DownloadListener.NONE,
+        headers: Map<String, String> = emptyMap(),
     ): DownloadOutcome = withContext(Dispatchers.IO) {
+        val client = RequestHeaders.apply(this@SegmentedDownloader.client, url, headers)
         val probe = Prober.probe(client, url)
-        if (!probe.sizeKnown) return@withContext streamUnknownSize(url, target, probe, listener)
+        if (!probe.sizeKnown) return@withContext streamUnknownSize(client, url, target, probe, listener)
         val multi = probe.acceptRanges && probe.totalBytes >= SegmentPlanner.SMALL_FILE_BYTES
         // Resume tabhi jab server wahi file de raha ho (ETag/Last-Modified/length match).
         val saved = resume?.takeIf { multi && ResumeValidator.canResume(it.validators, probe.validators) }
@@ -48,7 +50,7 @@ class SegmentedDownloader(
         RandomAccessFile(target, "rw").use { raf ->
             if (saved == null) raf.setLength(0)                       // stale data saaf
             if (raf.length() != probe.totalBytes) raf.setLength(probe.totalBytes)  // pehle se space reserve
-            Run(url, probe, multi, workers, segments, raf.channel, listener).run()
+            Run(client, url, probe, multi, workers, segments, raf.channel, listener).run()
         }
     }
 
@@ -57,7 +59,7 @@ class SegmentedDownloader(
      * Limits (imaandaar): % aur ETA nahi, resume nahi (ruk gaya to zero se), multi-connection nahi.
      * Web page (text/html) ko file samajh ke save nahi karte: wo aksar "download page" hota hai.
      */
-    private suspend fun streamUnknownSize(url: String, target: File, probe: Probe, listener: DownloadListener): DownloadOutcome {
+    private suspend fun streamUnknownSize(client: OkHttpClient, url: String, target: File, probe: Probe, listener: DownloadListener): DownloadOutcome {
         val name = target.name.lowercase()
         val isPage = probe.contentType?.substringBefore(';')?.trim()?.lowercase() in setOf("text/html", "application/xhtml+xml")
         if (isPage && !(name.endsWith(".html") || name.endsWith(".htm") || name.endsWith(".xhtml"))) {
@@ -119,6 +121,7 @@ class SegmentedDownloader(
     }
 
     private inner class Run(
+        val client: OkHttpClient,
         val url: String,
         val probe: Probe,
         val multi: Boolean,

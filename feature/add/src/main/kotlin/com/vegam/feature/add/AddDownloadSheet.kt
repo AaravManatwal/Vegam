@@ -68,6 +68,7 @@ private enum class When { NOW, HOUR, NIGHT, CUSTOM }
 fun AddDownloadSheet(
     prefillUrl: String?,
     onDismiss: () -> Unit,
+    onOpenCapture: (String) -> Unit = {},
     viewModel: AddViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -225,6 +226,7 @@ private fun MetaCard(state: AddUiState, onName: (String) -> Unit) {
                         "Dhyan: ye link web page (HTML) de raha hai, asli file nahi. Download fail ho sakta hai: asli download link browser se copy karo.",
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error,
                     )
+                    androidx.compose.material3.OutlinedButton(onClick = { onOpenCapture(state.url) }) { Text("Page kholo, asli download pakdo") }
                 }
             } else if (meta is MetaState.Error) {
                 Text("Info nahi mili (${meta.message}). Phir bhi try kar sakte ho.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)

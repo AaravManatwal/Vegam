@@ -32,6 +32,7 @@ data class DownloadEntity(
     val scheduledAt: Long? = null,                      // null = abhi, warna is time ke baad
     val completedAt: Long? = null,
     val destUri: String? = null,                        // SAF folder (tree uri); null = app ka private folder
+    val headers: String? = null,                        // page se pakda download: "User-Agent: ..\nReferer: ..\nCookie: .." (RequestHeaders)
 )
 
 /** Segment ka progress. Column names `start`/`end` SQL keywords se bachne ke liye rangeStart/rangeEnd hain. */

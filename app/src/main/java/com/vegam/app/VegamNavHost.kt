@@ -45,6 +45,7 @@ import com.vegam.core.ui.rememberVegamHaptics
 import com.vegam.core.ui.vegamBackground
 import com.vegam.engine.UrlNames
 import com.vegam.feature.add.AddDownloadSheet
+import com.vegam.feature.add.WebCaptureScreen
 import com.vegam.feature.detail.DetailScreen
 import com.vegam.feature.home.HomeScreen
 import com.vegam.feature.settings.SettingsScreen
@@ -79,6 +80,7 @@ fun VegamNavHost(
     val entry by nav.currentBackStackEntryAsState()
     val route = entry?.destination?.route
     var showAdd by remember { mutableStateOf(false) }
+    var captureUrl by remember { mutableStateOf<String?>(null) }
     val haptics = rememberVegamHaptics()
     var prefill by remember { mutableStateOf<String?>(null) }
     val snack = remember { SnackbarHostState() }
@@ -173,9 +175,14 @@ fun VegamNavHost(
         }
     }
 
-    SmartDownloadSheet(onOpenManual = { url -> prefill = url; showAdd = true })
+    SmartDownloadSheet(onOpenManual = { url -> prefill = url; showAdd = true }, onOpenCapture = { captureUrl = it })
 
     if (showAdd) {
-        AddDownloadSheet(prefillUrl = prefill, onDismiss = { showAdd = false })
+        AddDownloadSheet(prefillUrl = prefill, onDismiss = { showAdd = false }, onOpenCapture = { showAdd = false; captureUrl = it })
+    }
+
+    // "Page kholo, asli download pakdo": poori screen par WebView.
+    captureUrl?.let { u ->
+        WebCaptureScreen(startUrl = u, onBack = { captureUrl = null }, onAdded = { captureUrl = null })
     }
 }
