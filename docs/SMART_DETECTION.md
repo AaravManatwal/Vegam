@@ -82,3 +82,7 @@ Kuch bhi browser ki setting chupke se nahi badla jaata.
 - `<queries>` VIEW https: sirf Browser Integration ke "Test" ke liye (Android 11+ package visibility).
 - `usesCleartextTraffic="true"`: pehle http:// links Android 9+ par fail hote the. Ab chalte hain, par Smart dialog HTTP par YELLOW + extra confirmation deta hai aur HTTPS alternative sujhata hai. Ye security-relevant hai: nahi chahiye to is line ko hata do (tab http downloads fail honge).
 - minSdk 26 / target 35 / compile 35: **badla nahi**.
+
+## 10. Build 2: "Page kholo, asli download pakdo"
+Jab link file nahi balki web page (download page/countdown/button) ho (jaise vcloud.my), Add sheet aur Smart dialog ek button dete hain jo page app ke andar (WebView) kholta hai. User khud button dabata hai; WebView ka DownloadListener asli file URL + User-Agent + Referer + Cookie pakadta hai; Vegam poochta hai aur engine wahi headers bhejta hai (DB v4 `headers` column, app-private).
+Limits: blob:/data: downloads pakad nahi sakte; kuch hosts ke links ek baar ya IP/session se bandhe hote hain; Vegam koi captcha/login bypass nahi karta; Cookie DB mein download ke saath rehti hai (app-private) jab tak entry delete na ho.
