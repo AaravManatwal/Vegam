@@ -33,7 +33,8 @@ object RequestHeaders {
             val req = chain.request()
             val b = req.newBuilder()
             headers.forEach { (k, v) ->
-                if (req.header(k) != null) return@forEach
+                // OkHttp apna default User-Agent pehle hi laga deta hai: usse badalna hai. Baaki headers khaali ho tabhi.
+                if (!k.equals("user-agent", ignoreCase = true) && req.header(k) != null) return@forEach
                 if (k.equals("cookie", ignoreCase = true) && req.url.host != host) return@forEach
                 b.header(k, v)
             }

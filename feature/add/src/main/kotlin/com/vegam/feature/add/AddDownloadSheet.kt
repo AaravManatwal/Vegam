@@ -105,7 +105,7 @@ fun AddDownloadSheet(
                 shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth(),
             )
 
-            MetaCard(state, viewModel::onNameChange)
+            MetaCard(state, viewModel::onNameChange, onOpenCapture)
 
             // Connections
             Column {
@@ -194,7 +194,7 @@ private fun nextAt(hour: Int, minute: Int): Long =
 
 /** Metadata: shimmer (loading) -> naam + size + Range support. Naam edit ho sakta hai. */
 @Composable
-private fun MetaCard(state: AddUiState, onName: (String) -> Unit) {
+private fun MetaCard(state: AddUiState, onName: (String) -> Unit, onOpenCapture: (String) -> Unit) {
     when (val meta = state.meta) {
         MetaState.Idle -> Text(
             "Link daalte hi naam, size aur type yahan dikhega.",
